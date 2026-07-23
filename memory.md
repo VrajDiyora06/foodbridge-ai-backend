@@ -125,6 +125,28 @@ Interfaces exported:
 - `IUser` — plain data shape
 - `IUserDocument` — extends IUser + Document, includes _id typing and instance methods
 
+**src/repositories/**
+- `user.repository.ts` — data access layer for the User collection
+
+Methods:
+- `create(data)` — insert a new user (password must already be hashed by caller)
+- `findByEmail(email)` — lookup by email, no password
+- `findById(id)` — lookup by ObjectId, no password
+- `findByIdWithPassword(id)` — includes password field (for password reset)
+- `findByEmailWithPassword(email)` — includes password field (for login)
+- `existsByEmail(email)` — boolean check using `countDocuments` with `limit(1)`
+- `updatePassword(userId, hashedPassword)` — replace hash, set `passwordChangedAt`
+- `markEmailVerified(userId)` — set `isVerified = true`
+- `updateLastLogin(userId)` — stamp `lastLoginAt`
+- `deactivateUser(userId)` — set `accountStatus = inactive`
+- `activateUser(userId)` — set `accountStatus = active`
+
+All update methods return the updated document (`{ new: true }`).
+All read methods use `.lean()` for plain JS objects (faster, lower memory).
+
+Exported types:
+- `CreateUserData` — input interface for the `create` method
+
 ### Verification results
 
 | Check | Result |
@@ -143,7 +165,6 @@ Interfaces exported:
 ## What has NOT been built yet
 
 - Authentication logic (JWT, registration, login, refresh tokens, middleware)
-- User repository (data access layer)
 - Auth validation schemas (Zod)
 - Auth controller, service, routes
 - Token service (JWT + Redis token management)
@@ -171,10 +192,16 @@ Interfaces exported:
 - **`passwordChangedAt` on model, tokens in Redis** — model tracks the timestamp so auth middleware can invalidate tokens; actual verification/reset tokens live in Redis with TTLs
 - **`Record<string, unknown>` for Mongoose transform `ret`** — TypeScript strict mode disallows `delete` on non-optional typed properties, so we type the plain object as a record
 - **Compound index `{ role, accountStatus }`** — supports future admin dashboard queries that filter by role and status together
+- **Repository uses `.lean()`** — returns plain JS objects instead of Mongoose documents, faster and lower memory for read queries
+- **`existsByEmail` uses `countDocuments` + `limit(1)`** — stops scanning after first match, cheaper than `findOne` when you only need a boolean
+- **`findByEmailWithPassword` is a separate method** — password-inclusive queries are explicit, never accidental
+- **Repository never hashes passwords** — it receives pre-hashed strings from the service layer, keeping crypto concerns out of the data layer
+- **All update methods return `{ new: true }`** — callers always get the updated document without a second query
 
 ## Commit history
 
 ```
 chore: initialize production backend architecture
 feat(auth): add user model
+feat(auth): add user repository
 ```
