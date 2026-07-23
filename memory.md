@@ -88,6 +88,43 @@ Routes → Controllers → Services → Repositories → Database
 - `.github/workflows/` — CI/CD pipelines
 - `logs/` — Winston file output
 
+### Phase 2 — Authentication: User model (completed)
+
+**src/models/**
+- `user.model.ts` — Mongoose User schema with full auth support
+
+Enums:
+- `UserRole`: user, donor, ngo, volunteer, admin
+- `AccountStatus`: active, inactive, suspended
+
+Schema fields:
+- `name` — string, required, trimmed, 2-50 chars
+- `email` — string, required, unique, lowercase, regex-validated, indexed
+- `password` — string, required, min 8 chars, `select: false` (excluded from queries by default)
+- `role` — UserRole enum, defaults to 'user'
+- `accountStatus` — AccountStatus enum, defaults to 'active'
+- `isVerified` — boolean, defaults to false (email verification)
+- `passwordChangedAt` — Date or null (used to invalidate tokens issued before a password change)
+- `lastLoginAt` — Date or null
+- `createdAt` / `updatedAt` — auto via Mongoose timestamps
+
+Indexes:
+- `email` — unique (from schema `unique: true`)
+- `{ role: 1, accountStatus: 1 }` — compound, for admin dashboard filtered queries
+- `{ email: 1, isVerified: 1 }` — compound, speeds up login verification checks
+
+Instance methods:
+- `isPasswordChangedAfter(jwtIssuedAt)` — returns true if password changed after the token was issued, used by auth middleware to reject stale tokens
+
+JSON/Object serialization (toJSON, toObject transforms):
+- Renames `_id` to `id`
+- Strips `__v`, `password`, `passwordChangedAt`
+- Typed `ret` as `Record<string, unknown>` to satisfy TypeScript strict mode delete operator
+
+Interfaces exported:
+- `IUser` — plain data shape
+- `IUserDocument` — extends IUser + Document, includes _id typing and instance methods
+
 ### Verification results
 
 | Check | Result |
@@ -105,15 +142,19 @@ Routes → Controllers → Services → Repositories → Database
 
 ## What has NOT been built yet
 
-- Authentication (JWT, registration, login, refresh tokens)
-- User model and RBAC
+- Authentication logic (JWT, registration, login, refresh tokens, middleware)
+- User repository (data access layer)
+- Auth validation schemas (Zod)
+- Auth controller, service, routes
+- Token service (JWT + Redis token management)
+- Crypto utility (secure random token generation)
+- Auth rate limiting
 - Donation/food listing models and CRUD
-- Zod validation schemas
 - BullMQ job queues
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
-- Any business logic
+- Email sending (SMTP/SendGrid)
 
 ## Key decisions
 
@@ -125,9 +166,15 @@ Routes → Controllers → Services → Repositories → Database
 - **`isOperational` flag on AppError** — lets the global error handler distinguish expected errors from bugs
 - **10-second forced shutdown timeout** — prevents zombie containers
 - **`http-status-codes` removed from ApiResponse defaults** — used plain strings to avoid ReasonPhrases enum type conflicts with custom messages
+- **`password: select: false`** — password hash never returned unless explicitly requested with `.select('+password')`
+- **`AccountStatus` enum vs boolean `isActive`** — enum supports suspended state (e.g., admin action vs user self-deactivation), more flexible than a boolean
+- **`passwordChangedAt` on model, tokens in Redis** — model tracks the timestamp so auth middleware can invalidate tokens; actual verification/reset tokens live in Redis with TTLs
+- **`Record<string, unknown>` for Mongoose transform `ret`** — TypeScript strict mode disallows `delete` on non-optional typed properties, so we type the plain object as a record
+- **Compound index `{ role, accountStatus }`** — supports future admin dashboard queries that filter by role and status together
 
 ## Commit history
 
 ```
 chore: initialize production backend architecture
+feat(auth): add user model
 ```
