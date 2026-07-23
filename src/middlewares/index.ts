@@ -7,3 +7,4 @@ export {
   rateLimiter,
 } from './security.middleware';
 export { requestId, requestLogger } from './base.middleware';
+export { validate } from './validate.middleware';

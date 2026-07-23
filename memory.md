@@ -147,6 +147,31 @@ All read methods use `.lean()` for plain JS objects (faster, lower memory).
 Exported types:
 - `CreateUserData` — input interface for the `create` method
 
+### Phase 2 — Authentication: Validation schemas (completed)
+
+**src/validations/**
+- `auth.validation.ts` — six Zod schemas for auth request bodies
+
+Schemas:
+- `registerSchema` — name (trim, 2-50), email (valid, lowercase), password (8-128, uppercase+lowercase+digit+special), confirmPassword (must match), role (optional, defaults to 'user')
+- `loginSchema` — email, password (min 1, no complexity rules — don't leak policy on login)
+- `verifyEmailSchema` — token (non-empty string)
+- `forgotPasswordSchema` — email
+- `resetPasswordSchema` — token, password (same rules as register), confirmPassword (must match)
+- `refreshTokenSchema` — refreshToken (non-empty string)
+
+Reusable internals:
+- `passwordField` — shared Zod chain for password validation (register + reset)
+- `emailField` — shared email chain with lowercase + trim
+- `PASSWORD_REGEX` — lookahead regex requiring uppercase, lowercase, digit, special char
+
+Exported DTO types (via `z.infer`):
+- `RegisterDto`, `LoginDto`, `VerifyEmailDto`, `ForgotPasswordDto`, `ResetPasswordDto`, `RefreshTokenDto`
+
+**src/middlewares/**
+- `validate.middleware.ts` — generic middleware accepting any ZodSchema, parses req.body, replaces it with clean output, returns 400 with per-field errors on failure
+- Added to `middlewares/index.ts` barrel export
+
 ### Verification results
 
 | Check | Result |
@@ -165,7 +190,6 @@ Exported types:
 ## What has NOT been built yet
 
 - Authentication logic (JWT, registration, login, refresh tokens, middleware)
-- Auth validation schemas (Zod)
 - Auth controller, service, routes
 - Token service (JWT + Redis token management)
 - Crypto utility (secure random token generation)
@@ -197,6 +221,10 @@ Exported types:
 - **`findByEmailWithPassword` is a separate method** — password-inclusive queries are explicit, never accidental
 - **Repository never hashes passwords** — it receives pre-hashed strings from the service layer, keeping crypto concerns out of the data layer
 - **All update methods return `{ new: true }`** — callers always get the updated document without a second query
+- **Login schema uses `min(1)` not the full password regex** — revealing password complexity rules on the login endpoint leaks information about the password policy
+- **`validate` middleware returns 400 directly** — validation failures are expected, not exceptional, so we format them inline rather than throwing to the global error handler
+- **`req.body` is replaced with parsed output** — downstream code always sees trimmed, lowercased, defaulted data without re-parsing
+- **Password regex uses lookaheads, not multiple `.regex()` calls** — single regex is cleaner and gives one error message instead of four separate ones
 
 ## Commit history
 
@@ -204,4 +232,5 @@ Exported types:
 chore: initialize production backend architecture
 feat(auth): add user model
 feat(auth): add user repository
+feat(auth): add auth validation schemas
 ```
