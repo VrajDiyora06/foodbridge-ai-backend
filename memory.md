@@ -434,10 +434,25 @@ Endpoints mounted:
 - `PATCH /api/v1/food/:id/status` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateFoodStatusSchema)` → `foodController.updateFoodStatus`
 - `DELETE /api/v1/food/:id` → `authenticate` → `authorize(DONOR, ADMIN)` → `foodController.deleteFood`
 
+### Phase 3 — Food Redistribution: Swagger documentation (completed)
+
+**src/routes/**
+- `food.routes.ts` — annotated with OpenAPI 3.0 JSDoc specifications for all 9 food listing endpoints and 10 component schemas (`Food`, `Location`, `Coordinates`, `CreateFoodRequest`, `UpdateFoodRequest`, `UpdateFoodStatusRequest`, `FoodStatistics`, `PaginatedFoodResponse`, `FoodResponse`, `ErrorResponse`).
+
+Endpoints documented:
+- `GET /api/v1/food` (200 OK paginated, query parameter filtering)
+- `GET /api/v1/food/nearby` (200 OK paginated, latitude/longitude proximity search)
+- `GET /api/v1/food/my` (200 OK paginated, Bearer authentication required)
+- `GET /api/v1/food/my/statistics` (200 OK statistics envelope, Bearer authentication required)
+- `GET /api/v1/food/:id` (200 OK details / 404 Not Found)
+- `POST /api/v1/food` (201 Created / 400 Validation / 401 Unauthorized / 403 Forbidden)
+- `PATCH /api/v1/food/:id` (200 OK / 400 Invalid / 401 Unauthorized / 403 Forbidden / 404 Not Found)
+- `PATCH /api/v1/food/:id/status` (200 OK / 400 Invalid state transition / 401 Unauthorized / 403 Forbidden / 404 Not Found)
+- `DELETE /api/v1/food/:id` (200 OK message / 401 Unauthorized / 403 Forbidden / 404 Not Found)
+
 
 ## What has NOT been built yet
 
-- Swagger OpenAPI annotations for Food module
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -495,6 +510,7 @@ Endpoints mounted:
 - **Ownership verification in food service** — safely extracts donor ID whether `food.donor` is populated as an object or stored as an ObjectId
 - **ApiResponse.paginated used for all paginated listing endpoints** — formats data array and metadata (`page`, `limit`, `total`, `totalPages`) consistently
 - **Static route paths before parameterized `/:id` route in Express router** — `/nearby`, `/my`, `/my/statistics` defined before `/:id` so Express doesn't match string literals as ID parameters
+- **Co-located Swagger annotations on food routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 
 ## Commit history
 
@@ -515,4 +531,5 @@ feat(food): add food validation schemas
 feat(food): add food service
 feat(food): add food controller
 feat(food): add food routes
+docs(food): add swagger documentation
 ```
