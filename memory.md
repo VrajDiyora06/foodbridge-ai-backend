@@ -450,9 +450,31 @@ Endpoints documented:
 - `PATCH /api/v1/food/:id/status` (200 OK / 400 Invalid state transition / 401 Unauthorized / 403 Forbidden / 404 Not Found)
 - `DELETE /api/v1/food/:id` (200 OK message / 401 Unauthorized / 403 Forbidden / 404 Not Found)
 
+### Phase 4 — Reservation Module: Reservation model (completed)
+
+**src/models/**
+- `reservation.model.ts` — Mongoose schema, model, virtuals, instance methods, and indexes for food reservation claims
+- `index.ts` — Barrel exports for models (`User`, `Food`, `Reservation`) and their types/enums
+
+Enums exported:
+- `ReservationStatus` (`pending`, `accepted`, `rejected`, `cancelled`, `picked_up`, `completed`, `expired`)
+- `ClaimerRole` (`ngo`, `volunteer`)
+
+Virtuals & Instance Methods:
+- `isActive` virtual — returns `true` for `pending`, `accepted`, `picked_up`
+- `canCancel()` method — returns `true` for `pending`, `accepted`
+
+Indexes created:
+- `{ food: 1 }`
+- `{ status: 1 }`
+- `{ claimer: 1 }`
+- Compound `{ food: 1, status: 1 }`
+- Compound `{ claimer: 1, status: 1 }`
+
 
 ## What has NOT been built yet
 
+- Reservation repository, validation schemas, service, controller, routes, and Swagger docs
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -511,6 +533,8 @@ Endpoints documented:
 - **ApiResponse.paginated used for all paginated listing endpoints** — formats data array and metadata (`page`, `limit`, `total`, `totalPages`) consistently
 - **Static route paths before parameterized `/:id` route in Express router** — `/nearby`, `/my`, `/my/statistics` defined before `/:id` so Express doesn't match string literals as ID parameters
 - **Co-located Swagger annotations on food routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
+- **Reservation `isActive` virtual & `canCancel()` method** — encapsulates reservation lifecycle validation on the document model
+- **Compound indexes `{ food, status }` and `{ claimer, status }`** — optimizes active reservation lookups and claimer history queries
 
 ## Commit history
 
@@ -532,4 +556,5 @@ feat(food): add food service
 feat(food): add food controller
 feat(food): add food routes
 docs(food): add swagger documentation
+feat(reservation): add reservation model
 ```
