@@ -362,10 +362,26 @@ Methods:
 Interfaces exported:
 - `CreateFoodData`, `UpdateFoodData`, `FoodFilters`, `PaginationOptions`, `PaginatedResult<T>`
 
+### Phase 3 — Food Redistribution: Food validation schemas (completed)
+
+**src/validations/**
+- `food.validation.ts` — four Zod schemas for food endpoints (`createFoodSchema`, `updateFoodSchema`, `foodQuerySchema`, `updateFoodStatusSchema`)
+
+Reusable helper schemas:
+- `coordinatesSchema` — latitude [-90, 90], longitude [-180, 180]
+- `locationSchema` — address, city, state, postalCode, country, coordinates
+
+Cross-field validation rules via `.superRefine`:
+- `expiresAt` > `preparedAt`
+- `pickupEndTime` > `pickupStartTime`
+- `allergens` array required when `containsAllergens === true`
+
+Exported DTO types:
+- `CreateFoodDto`, `UpdateFoodDto`, `FoodQueryDto`, `UpdateFoodStatusDto`
+
 
 ## What has NOT been built yet
 
-- Food validation schemas (Zod)
 - Food service, controller, and routes
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
@@ -419,6 +435,8 @@ Interfaces exported:
 - **`isExpired` virtual & `canBeReserved()` instance method** — encapsulates state logic directly on the model
 - **`FoodRepository.findNearby` uses `$near` + `$geometry`** — performs geospatial search within a given kilometer radius converting to meters (`radiusKm * 1000`)
 - **Parallel `find` & `countDocuments` queries** — `findAll` and `findNearby` run data fetching and total count concurrently using `Promise.all` for optimal response time
+- **`.superRefine` for cross-field food validations** — validates date ordering (`expiresAt > preparedAt`, `pickupEndTime > pickupStartTime`) and conditional allergen requirement (`containsAllergens == true`)
+- **`z.coerce` for date and query parameters** — automatically converts ISO date strings and URL query parameter strings into proper JavaScript `Date`, `number`, and `boolean` types
 
 ## Commit history
 
@@ -435,4 +453,5 @@ feat(auth): add auth routes
 docs(auth): add swagger documentation
 feat(food): add food listing model
 feat(food): add food repository
+feat(food): add food validation schemas
 ```
