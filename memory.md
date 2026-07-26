@@ -171,6 +171,17 @@ Exported DTO types (via `z.infer`):
 **src/middlewares/**
 - `validate.middleware.ts` — generic middleware accepting any ZodSchema, parses req.body, replaces it with clean output, returns 400 with per-field errors on failure
 - Added to `middlewares/index.ts` barrel export
+### Phase 2 — Authentication: Crypto utilities (completed)
+
+**src/utils/**
+- `crypto.util.ts` — four cryptographic helpers using only Node.js built-in `crypto` module
+- Added to `utils/index.ts` barrel export
+
+Functions:
+- `generateRandomToken(bytes?)` — `crypto.randomBytes`, returns hex string, default 32 bytes (64 hex chars). Used for email verification and password reset tokens.
+- `generateTokenId()` — `crypto.randomUUID()`, returns UUID v4. Used as JWT `jti` and refresh token identifiers.
+- `generateSecureOTP(length?)` — numeric OTP via rejection sampling (eliminates modulo bias), default 6 digits, max 10. Used for future OTP verification flows.
+- `timingSafeCompare(a, b)` — wraps `crypto.timingSafeEqual`, handles different-length strings without leaking timing info (compares bufA against itself then returns false). Used for token comparison.
 
 ### Verification results
 
@@ -192,7 +203,6 @@ Exported DTO types (via `z.infer`):
 - Authentication logic (JWT, registration, login, refresh tokens, middleware)
 - Auth controller, service, routes
 - Token service (JWT + Redis token management)
-- Crypto utility (secure random token generation)
 - Auth rate limiting
 - Donation/food listing models and CRUD
 - BullMQ job queues
@@ -225,6 +235,9 @@ Exported DTO types (via `z.infer`):
 - **`validate` middleware returns 400 directly** — validation failures are expected, not exceptional, so we format them inline rather than throwing to the global error handler
 - **`req.body` is replaced with parsed output** — downstream code always sees trimmed, lowercased, defaulted data without re-parsing
 - **Password regex uses lookaheads, not multiple `.regex()` calls** — single regex is cleaner and gives one error message instead of four separate ones
+- **Rejection sampling for OTP generation** — `randomBytes % max` has modulo bias; rejection sampling discards values above the largest clean multiple to produce uniform distribution
+- **`timingSafeCompare` handles length mismatch** — compares bufA against itself before returning false, so the function always takes constant time regardless of whether lengths match
+- **Zero third-party crypto deps** — all four functions use Node.js built-in `crypto`, no `uuid` or `nanoid` packages needed
 
 ## Commit history
 
@@ -233,4 +246,5 @@ chore: initialize production backend architecture
 feat(auth): add user model
 feat(auth): add user repository
 feat(auth): add auth validation schemas
+feat(auth): add crypto utilities
 ```
