@@ -548,10 +548,27 @@ Controller methods:
 Exported class & singleton:
 - `ReservationController`, `reservationController`
 
+### Phase 4 — Reservation Module: Reservation routes (completed)
+
+**src/routes/**
+- `reservation.routes.ts` — Express router mapping 9 reservation endpoints to validation schemas, auth/RBAC middlewares, and `reservationController`
+- Mounted in `src/routes/index.ts` under `/reservations` (effective URL path `/api/v1/reservations`)
+
+Endpoints mounted:
+- `GET /api/v1/reservations/my` → `authenticate` → `authorize(NGO, VOLUNTEER)` → `validate(reservationQuerySchema)` → `reservationController.getMyReservations`
+- `GET /api/v1/reservations/my/statistics` → `authenticate` → `authorize(NGO, VOLUNTEER)` → `reservationController.getReservationStatistics`
+- `GET /api/v1/reservations/:id` → `authenticate` → `authorize(NGO, VOLUNTEER, DONOR, ADMIN)` → `reservationController.getReservationById`
+- `POST /api/v1/reservations` → `authenticate` → `authorize(NGO, VOLUNTEER)` → `validate(createReservationSchema)` → `reservationController.createReservation`
+- `PATCH /api/v1/reservations/:id/accept` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.acceptReservation`
+- `PATCH /api/v1/reservations/:id/reject` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.rejectReservation`
+- `PATCH /api/v1/reservations/:id/cancel` → `authenticate` → `authorize(NGO, VOLUNTEER)` → `validate(cancelReservationSchema)` → `reservationController.cancelReservation`
+- `PATCH /api/v1/reservations/:id/pickup` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.markPickedUp`
+- `PATCH /api/v1/reservations/:id/complete` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.completeReservation`
+
 
 ## What has NOT been built yet
 
-- Reservation routes and Swagger docs
+- Swagger OpenAPI annotations for Reservation module
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -616,6 +633,7 @@ Exported class & singleton:
 - **Strict Reservation State Machine** — `PENDING` → `ACCEPTED`/`REJECTED`/`CANCELLED`; `ACCEPTED` → `PICKED_UP`/`CANCELLED`; `PICKED_UP` → `COMPLETED`
 - **Automatic Food Status Sync** — accepting/creating reservation updates food to `RESERVED`, rejecting/cancelling returns food to `AVAILABLE`, picking up sets `PICKED_UP`, completing sets `DELIVERED`
 - **Clean separation of Donor actions vs Claimer actions** — `accept`, `reject`, `pickup`, `complete` handled by food donor owner; `cancel` handled by claimer owner
+- **Strict route ordering in reservation router** — static `/my` and `/my/statistics` mounted before `/:id` to prevent route matching collisions
 
 ## Commit history
 
@@ -642,4 +660,5 @@ feat(reservation): add reservation repository
 feat(reservation): add reservation validation
 feat(reservation): add reservation service
 feat(reservation): add reservation controller
+feat(reservation): add reservation routes
 ```
