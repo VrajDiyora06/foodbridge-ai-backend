@@ -508,10 +508,30 @@ Reusable helper schemas:
 Exported DTO types:
 - `CreateReservationDto`, `UpdateReservationStatusDto`, `ReservationQueryDto`, `CancelReservationDto`
 
+### Phase 4 — Reservation Module: Reservation service (completed)
+
+**src/services/**
+- `reservation.service.ts` — food reservation business logic (`ReservationService` class & exported singleton `reservationService`)
+- `index.ts` — Barrel exports for services (`HealthService`, `AuthService`, `TokenService`, `FoodService`, `ReservationService`)
+
+Methods implemented:
+- `createReservation(userId, dto)` — validates user (active, verified, NGO/Volunteer role), verifies food (available, unexpired, no active claim), creates reservation claim, sets food status to `RESERVED`
+- `getReservationById(id)` — retrieves reservation populated with `food` and `claimer` details, throws 404 if missing
+- `getMyReservations(userId, query)` — paginated list of reservations claimed by user
+- `acceptReservation(reservationId, donorId)` — donor owner accepts pending claim (`pending` → `accepted`, food stays `RESERVED`)
+- `rejectReservation(reservationId, donorId)` — donor owner rejects pending claim (`pending` → `rejected`, food returns to `AVAILABLE`)
+- `cancelReservation(reservationId, userId, dto)` — claimer owner cancels pending/accepted claim (`pending`/`accepted` → `cancelled`, food returns to `AVAILABLE`)
+- `markPickedUp(reservationId, donorId)` — donor owner marks accepted claim as picked up (`accepted` → `picked_up`, food status `PICKED_UP`)
+- `completeReservation(reservationId, donorId)` — donor owner marks picked up claim as completed (`picked_up` → `completed`, food status `DELIVERED`)
+- `getReservationStatistics(userId)` — aggregate counts (`total`, `pending`, `accepted`, `completed`, `cancelled`) using `Promise.all`
+
+Exported interfaces & singleton:
+- `ReservationStatistics`, `reservationService`
+
 
 ## What has NOT been built yet
 
-- Reservation service, controller, routes, and Swagger docs
+- Reservation controller, routes, and Swagger docs
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -573,6 +593,8 @@ Exported DTO types:
 - **Reservation `isActive` virtual & `canCancel()` method** — encapsulates reservation lifecycle validation on the document model
 - **`findActiveByFood` in ReservationRepository** — queries `status: { $in: ['pending', 'accepted', 'picked_up'] }` to ensure single active claim per food item
 - **Regex-based Mongo ObjectId Zod validator (`objectIdSchema`)** — verifies 24-hex-char MongoDB string ID format across reservation inputs
+- **Strict Reservation State Machine** — `PENDING` → `ACCEPTED`/`REJECTED`/`CANCELLED`; `ACCEPTED` → `PICKED_UP`/`CANCELLED`; `PICKED_UP` → `COMPLETED`
+- **Automatic Food Status Sync** — accepting/creating reservation updates food to `RESERVED`, rejecting/cancelling returns food to `AVAILABLE`, picking up sets `PICKED_UP`, completing sets `DELIVERED`
 
 ## Commit history
 
@@ -597,4 +619,5 @@ docs(food): add swagger documentation
 feat(reservation): add reservation model
 feat(reservation): add reservation repository
 feat(reservation): add reservation validation
+feat(reservation): add reservation service
 ```
