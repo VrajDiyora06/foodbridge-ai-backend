@@ -1,12 +1,11 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
+import authRoutes from './auth.routes';
 
 const router = Router();
 
-// Mount domain routes here as the project grows
-// e.g. router.use('/auth', authRoutes);
-// e.g. router.use('/donations', donationRoutes);
-
+// Mount domain routes
 router.use(healthRoutes);
+router.use('/auth', authRoutes);
 
 export default router;

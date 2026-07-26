@@ -8,3 +8,5 @@ export {
 } from './security.middleware';
 export { requestId, requestLogger } from './base.middleware';
 export { validate } from './validate.middleware';
+export { authenticate, authorize } from './auth.middleware';
+

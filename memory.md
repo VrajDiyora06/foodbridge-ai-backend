@@ -284,14 +284,31 @@ Controller methods:
 Key design details:
 - Every async method wrapped with `asyncHandler` to forward unhandled promise rejections
 - Thin layer with 0 business logic, 0 db queries, 0 direct JWT/crypto/bcrypt usage
-- Exports `AuthController` class and singleton `authController` instance
+- Exports `AuthController` class and singleton `authController` instance### Phase 2 — Authentication: Auth middleware & routes (completed)
+
+**src/middlewares/**
+- `auth.middleware.ts` — `authenticate` (verifies JWT access token + checks Redis blacklist) and `authorize` (RBAC guard for allowed roles)
+- Added `authenticate` and `authorize` to `middlewares/index.ts` barrel export
+
+**src/routes/**
+- `auth.routes.ts` — Express router mapping auth endpoints to validation schemas and `authController` handlers
+- Mounted in `src/routes/index.ts` under `/auth` (effective URL path `/api/v1/auth`)
+
+Endpoints mounted:
+- `POST /api/v1/auth/register` → `validate(registerSchema)` → `authController.register`
+- `POST /api/v1/auth/verify-email` → `validate(verifyEmailSchema)` → `authController.verifyEmail`
+- `POST /api/v1/auth/login` → `validate(loginSchema)` → `authController.login`
+- `POST /api/v1/auth/refresh-token` → `validate(refreshTokenSchema)` → `authController.refreshToken`
+- `POST /api/v1/auth/forgot-password` → `validate(forgotPasswordSchema)` → `authController.forgotPassword`
+- `POST /api/v1/auth/reset-password` → `validate(resetPasswordSchema)` → `authController.resetPassword`
+- `POST /api/v1/auth/logout` → `authenticate` → `authController.logout`
+- `GET /api/v1/auth/me` → `authenticate` → `authController.getCurrentUser`
 
 
 ## What has NOT been built yet
 
-- Auth routes (mounting validate middleware + authController)
-- Auth middleware (JWT verification, role guard)
-- Auth rate limiting
+- Auth rate limiting (stricter limiter on auth routes)
+- Swagger OpenAPI annotations for auth endpoints
 - Donation/food listing models and CRUD
 - BullMQ job queues
 - Socket.IO real-time events
@@ -338,6 +355,7 @@ Key design details:
 - **Password reset revokes all refresh tokens** — forces re-login on all devices after a password change
 - **Verification token returned in response only in development** — in production it would be emailed, not exposed in API
 - **Thin controllers using class arrow properties** — `register = asyncHandler(...)` ensures `this` binding remains intact when passed as route handlers
+- **Auth middleware checks Redis blacklist** — `authenticate` checks `isAccessTokenBlacklisted` so logged-out tokens are immediately invalid
 
 ## Commit history
 
@@ -350,4 +368,5 @@ feat(auth): add crypto utilities
 feat(auth): add token service
 feat(auth): add auth service
 feat(auth): add auth controller
+feat(auth): add auth routes
 ```
