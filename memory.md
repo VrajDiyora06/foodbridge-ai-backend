@@ -565,10 +565,25 @@ Endpoints mounted:
 - `PATCH /api/v1/reservations/:id/pickup` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.markPickedUp`
 - `PATCH /api/v1/reservations/:id/complete` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateReservationStatusSchema)` → `reservationController.completeReservation`
 
+### Phase 4 — Reservation Module: Swagger documentation (completed)
+
+**src/routes/**
+- `reservation.routes.ts` — annotated with OpenAPI 3.0 JSDoc specifications for all 9 reservation endpoints and 8 component schemas (`Reservation`, `ReservationStatistics`, `CreateReservationRequest`, `CancelReservationRequest`, `ReservationResponse`, `PaginatedReservationResponse`, `ReservationStatusUpdateResponse`, `ErrorResponse`).
+
+Endpoints documented:
+- `GET /api/v1/reservations/my` (200 OK paginated, query filtering by status and claimerRole, Bearer auth)
+- `GET /api/v1/reservations/my/statistics` (200 OK statistics envelope, Bearer auth)
+- `GET /api/v1/reservations/{id}` (200 OK details / 401 / 403 / 404 Not Found, Bearer auth)
+- `POST /api/v1/reservations` (201 Created / 400 Bad Request / 401 / 403 / 404, Bearer auth)
+- `PATCH /api/v1/reservations/{id}/accept` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
+- `PATCH /api/v1/reservations/{id}/reject` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
+- `PATCH /api/v1/reservations/{id}/cancel` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
+- `PATCH /api/v1/reservations/{id}/pickup` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
+- `PATCH /api/v1/reservations/{id}/complete` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
+
 
 ## What has NOT been built yet
 
-- Swagger OpenAPI annotations for Reservation module
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -634,6 +649,7 @@ Endpoints mounted:
 - **Automatic Food Status Sync** — accepting/creating reservation updates food to `RESERVED`, rejecting/cancelling returns food to `AVAILABLE`, picking up sets `PICKED_UP`, completing sets `DELIVERED`
 - **Clean separation of Donor actions vs Claimer actions** — `accept`, `reject`, `pickup`, `complete` handled by food donor owner; `cancel` handled by claimer owner
 - **Strict route ordering in reservation router** — static `/my` and `/my/statistics` mounted before `/:id` to prevent route matching collisions
+- **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 
 ## Commit history
 
@@ -661,4 +677,5 @@ feat(reservation): add reservation validation
 feat(reservation): add reservation service
 feat(reservation): add reservation controller
 feat(reservation): add reservation routes
+docs(reservation): add swagger documentation
 ```
