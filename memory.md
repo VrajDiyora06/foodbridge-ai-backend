@@ -379,10 +379,29 @@ Cross-field validation rules via `.superRefine`:
 Exported DTO types:
 - `CreateFoodDto`, `UpdateFoodDto`, `FoodQueryDto`, `UpdateFoodStatusDto`
 
+### Phase 3 — Food Redistribution: Food service (completed)
+
+**src/services/**
+- `food.service.ts` — food donation business logic (`FoodService` class & exported singleton `foodService`)
+
+Methods implemented:
+- `createFood(donorId, dto)` — verify donor exists, active, and verified; save food listing
+- `getFoodById(foodId)` — retrieve listing with populated donor details, throw 404 if missing
+- `getAvailableFood(query)` — filter and paginate available listings; delegates to `findNearby` if coords provided
+- `getNearbyFood(lat, lng, radiusKm, pagination)` — geospatial proximity search delegation
+- `getDonorFood(donorId, pagination)` — retrieve all listings for a specific donor
+- `updateFood(foodId, donorId, dto)` — ownership validation; prevents updating delivered/cancelled listings
+- `updateFoodStatus(foodId, donorId, status)` — status transition enforcement (`AVAILABLE` → `RESERVED`/`PICKED_UP`/`DELIVERED`/`CANCELLED`; `RESERVED` → `PICKED_UP`/`DELIVERED`/`CANCELLED`; `PICKED_UP` → `DELIVERED`/`CANCELLED`; `EXPIRED`/`DELIVERED`/`CANCELLED` → terminal)
+- `deleteFood(foodId, donorId)` — ownership check; prevents deletion of delivered listings
+- `getFoodStatistics(donorId?)` — aggregate statistics using `Promise.all` concurrent execution
+
+Exported interfaces & singleton:
+- `FoodStatistics`, `foodService`
+
 
 ## What has NOT been built yet
 
-- Food service, controller, and routes
+- Food controller and routes
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -437,6 +456,8 @@ Exported DTO types:
 - **Parallel `find` & `countDocuments` queries** — `findAll` and `findNearby` run data fetching and total count concurrently using `Promise.all` for optimal response time
 - **`.superRefine` for cross-field food validations** — validates date ordering (`expiresAt > preparedAt`, `pickupEndTime > pickupStartTime`) and conditional allergen requirement (`containsAllergens == true`)
 - **`z.coerce` for date and query parameters** — automatically converts ISO date strings and URL query parameter strings into proper JavaScript `Date`, `number`, and `boolean` types
+- **Strict food status transition state machine** — enforces terminal states (`EXPIRED`, `DELIVERED`, `CANCELLED`) and allowed forward transitions
+- **Ownership verification in food service** — safely extracts donor ID whether `food.donor` is populated as an object or stored as an ObjectId
 
 ## Commit history
 
@@ -454,4 +475,5 @@ docs(auth): add swagger documentation
 feat(food): add food listing model
 feat(food): add food repository
 feat(food): add food validation schemas
+feat(food): add food service
 ```

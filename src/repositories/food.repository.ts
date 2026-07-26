@@ -4,6 +4,7 @@ import Food, {
   FoodStatus,
   FoodCategory,
   ILocation,
+  ICoordinates,
 } from '../models/food.model';
 
 // ── Input & Filter Interfaces ─────────────────────────────
@@ -28,7 +29,11 @@ export interface CreateFoodData {
   status?: FoodStatus;
 }
 
-export type UpdateFoodData = Partial<Omit<CreateFoodData, 'donor'>>;
+export type UpdateFoodData = Partial<Omit<CreateFoodData, 'donor' | 'location'>> & {
+  location?: Partial<Omit<ILocation, 'coordinates'>> & {
+    coordinates?: Partial<ICoordinates>;
+  };
+};
 
 export interface FoodFilters {
   status?: FoodStatus;
