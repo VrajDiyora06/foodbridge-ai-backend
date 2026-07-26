@@ -340,10 +340,31 @@ Indexes:
 - Geospatial: `location.coordinates` (2dsphere index for location-based search)
 - Compound: `{ status: 1, expiresAt: 1 }` (for active/available non-expired listings)
 
+### Phase 3 — Food Redistribution: Food repository (completed)
+
+**src/repositories/**
+- `food.repository.ts` — data access layer for `Food` collection
+
+Methods:
+- `create(data)` — insert a new food listing
+- `findById(id)` — lookup by ObjectId using `.lean()`
+- `findByIdWithDonor(id)` — lookup by ObjectId with `.populate('donor', 'name email role accountStatus')`
+- `findAvailableById(id)` — lookup by ID matching `status: AVAILABLE` and `expiresAt > now`
+- `findAll(filters, pagination)` — search/list with filters (`status`, `category`, `city`, `donor`, `vegetarian`, `vegan`, `expiresAfter`, `expiresBefore`) and pagination (`page`, `limit`, `sortBy`, `sortOrder`, `skip`)
+- `findNearby(lat, lng, radiusKm, pagination)` — geospatial `$near` query over 2dsphere `location.coordinates` returning available, non-expired listings
+- `findByDonor(donorId, pagination)` — helper delegating to `findAll({ donor: donorId })`
+- `update(id, data)` — partial field update returning updated document (`{ new: true }`)
+- `updateStatus(id, status)` — update listing status returning updated document
+- `delete(id)` — find and delete listing, returns boolean
+- `countByStatus(status)` — returns document count for a given status
+- `countByDonor(donorId)` — returns document count for a given donor ID
+
+Interfaces exported:
+- `CreateFoodData`, `UpdateFoodData`, `FoodFilters`, `PaginationOptions`, `PaginatedResult<T>`
+
 
 ## What has NOT been built yet
 
-- Food repository (data access layer)
 - Food validation schemas (Zod)
 - Food service, controller, and routes
 - Auth rate limiting (stricter limiter on auth routes)
@@ -396,6 +417,8 @@ Indexes:
 - **Swagger schemas embedded in auth routes** — keeps route definitions and OpenAPI schemas co-located for easy maintenance
 - **Geospatial 2dsphere index on `location.coordinates`** — enables proximity queries (finding nearby available food donations)
 - **`isExpired` virtual & `canBeReserved()` instance method** — encapsulates state logic directly on the model
+- **`FoodRepository.findNearby` uses `$near` + `$geometry`** — performs geospatial search within a given kilometer radius converting to meters (`radiusKm * 1000`)
+- **Parallel `find` & `countDocuments` queries** — `findAll` and `findNearby` run data fetching and total count concurrently using `Promise.all` for optimal response time
 
 ## Commit history
 
@@ -411,4 +434,5 @@ feat(auth): add auth controller
 feat(auth): add auth routes
 docs(auth): add swagger documentation
 feat(food): add food listing model
+feat(food): add food repository
 ```
