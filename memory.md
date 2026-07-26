@@ -398,10 +398,29 @@ Methods implemented:
 Exported interfaces & singleton:
 - `FoodStatistics`, `foodService`
 
+### Phase 3 — Food Redistribution: Food controller (completed)
+
+**src/controllers/**
+- `food.controller.ts` — thin HTTP request handlers delegating to `FoodService` and returning uniform `ApiResponse` envelopes
+
+Controller methods:
+- `createFood` — POST /api/v1/food (201 Created)
+- `getFoodById` — GET /api/v1/food/:id (200 OK)
+- `getAvailableFood` — GET /api/v1/food (200 OK paginated)
+- `getNearbyFood` — GET /api/v1/food/nearby (200 OK paginated)
+- `getMyFood` — GET /api/v1/food/my (200 OK paginated)
+- `updateFood` — PATCH /api/v1/food/:id (200 OK)
+- `updateFoodStatus` — PATCH /api/v1/food/:id/status (200 OK)
+- `deleteFood` — DELETE /api/v1/food/:id (200 OK message)
+- `getFoodStatistics` — GET /api/v1/food/my/statistics (200 OK)
+
+Exported class & singleton:
+- `FoodController`, `foodController`
+
 
 ## What has NOT been built yet
 
-- Food controller and routes
+- Food routes (mounting validation schemas + auth middleware + foodController)
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -455,9 +474,9 @@ Exported interfaces & singleton:
 - **`FoodRepository.findNearby` uses `$near` + `$geometry`** — performs geospatial search within a given kilometer radius converting to meters (`radiusKm * 1000`)
 - **Parallel `find` & `countDocuments` queries** — `findAll` and `findNearby` run data fetching and total count concurrently using `Promise.all` for optimal response time
 - **`.superRefine` for cross-field food validations** — validates date ordering (`expiresAt > preparedAt`, `pickupEndTime > pickupStartTime`) and conditional allergen requirement (`containsAllergens == true`)
-- **`z.coerce` for date and query parameters** — automatically converts ISO date strings and URL query parameter strings into proper JavaScript `Date`, `number`, and `boolean` types
 - **Strict food status transition state machine** — enforces terminal states (`EXPIRED`, `DELIVERED`, `CANCELLED`) and allowed forward transitions
 - **Ownership verification in food service** — safely extracts donor ID whether `food.donor` is populated as an object or stored as an ObjectId
+- **ApiResponse.paginated used for all paginated listing endpoints** — formats data array and metadata (`page`, `limit`, `total`, `totalPages`) consistently
 
 ## Commit history
 
@@ -476,4 +495,5 @@ feat(food): add food listing model
 feat(food): add food repository
 feat(food): add food validation schemas
 feat(food): add food service
+feat(food): add food controller
 ```
