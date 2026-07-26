@@ -182,6 +182,45 @@ Functions:
 - `generateTokenId()` — `crypto.randomUUID()`, returns UUID v4. Used as JWT `jti` and refresh token identifiers.
 - `generateSecureOTP(length?)` — numeric OTP via rejection sampling (eliminates modulo bias), default 6 digits, max 10. Used for future OTP verification flows.
 - `timingSafeCompare(a, b)` — wraps `crypto.timingSafeEqual`, handles different-length strings without leaking timing info (compares bufA against itself then returns false). Used for token comparison.
+### Phase 2 — Authentication: Token service (completed)
+
+**src/services/**
+- `token.service.ts` — centralized JWT generation/verification and Redis token lifecycle
+
+JWT payload interfaces:
+- `AccessTokenPayload` — `{ userId, role, jti }`, signed with `JWT_SECRET`, TTL 15m
+- `RefreshTokenPayload` — `{ userId, tokenId }`, signed with `JWT_REFRESH_SECRET`, TTL 30d
+
+Public methods:
+- `generateAccessToken(userId, role)` — short-lived JWT with jti for blacklisting
+- `verifyAccessToken(token)` — returns typed `AccessTokenPayload`
+- `generateRefreshToken(userId)` — returns `{ token, tokenId }`
+- `verifyRefreshToken(token)` — returns typed `RefreshTokenPayload`
+- `storeRefreshToken(userId, tokenId)` — Redis SET with TTL
+- `isRefreshTokenValid(userId, tokenId)` — Redis EXISTS check
+- `revokeRefreshToken(userId, tokenId)` — Redis DEL (logout, rotation)
+- `revokeAllUserRefreshTokens(userId)` — SCAN + DEL pattern `refresh:{userId}:*` (password reset)
+- `storeVerificationToken(userId)` — generates hex token, stores in Redis with 24h TTL
+- `getVerificationUser(token)` — returns userId or null
+- `deleteVerificationToken(token)` — Redis DEL
+- `storePasswordResetToken(userId)` — generates hex token, stores in Redis with 1h TTL
+- `getPasswordResetUser(token)` — returns userId or null
+- `deletePasswordResetToken(token)` — Redis DEL
+- `blacklistAccessToken(jti, ttlSeconds)` — Redis SET with TTL = remaining token life
+- `isAccessTokenBlacklisted(jti)` — Redis EXISTS check
+
+Redis key patterns:
+- `refresh:{userId}:{tokenId}` — active refresh tokens
+- `verify-email:{token}` — email verification
+- `reset-password:{token}` — password reset
+- `blacklist:{jti}` — logged-out access tokens
+
+Internal helper:
+- `parseDurationToSeconds(duration)` — converts `15m`, `7d`, etc. to seconds for Redis TTLs and JWT expiresIn
+
+**Modified files:**
+- `env.config.ts` — added `jwtRefreshSecret`, `bcryptSaltRounds`, `emailVerificationTtl`, `passwordResetTtl`, `clientUrl`; changed `jwtExpiresIn` default from `7d` to `15m`
+- `.env.example` — added matching env vars
 
 ### Verification results
 
@@ -200,9 +239,9 @@ Functions:
 
 ## What has NOT been built yet
 
-- Authentication logic (JWT, registration, login, refresh tokens, middleware)
-- Auth controller, service, routes
-- Token service (JWT + Redis token management)
+- Auth service (registration, login, refresh, password flows)
+- Auth controller and routes
+- Auth middleware (JWT verification, role guard)
 - Auth rate limiting
 - Donation/food listing models and CRUD
 - BullMQ job queues
@@ -238,6 +277,11 @@ Functions:
 - **Rejection sampling for OTP generation** — `randomBytes % max` has modulo bias; rejection sampling discards values above the largest clean multiple to produce uniform distribution
 - **`timingSafeCompare` handles length mismatch** — compares bufA against itself before returning false, so the function always takes constant time regardless of whether lengths match
 - **Zero third-party crypto deps** — all four functions use Node.js built-in `crypto`, no `uuid` or `nanoid` packages needed
+- **Separate JWT secrets for access and refresh tokens** — if the access token secret is compromised, refresh tokens remain safe
+- **`expiresIn` passed as numeric seconds, not string** — `@types/jsonwebtoken` v9 uses a branded `StringValue` type from `ms`; converting to seconds avoids the branded type issue and is more explicit
+- **SCAN with cursor pagination for `revokeAllUserRefreshTokens`** — never uses KEYS (blocks Redis); SCAN is non-blocking and paginates in batches of 100
+- **Blacklist TTL = remaining access token life** — blacklist entries auto-expire when the token would have expired anyway, keeping Redis memory bounded
+- **Verification/reset tokens are 64-char hex strings stored as Redis keys** — not JWTs, because they're single-use and need server-side revocation
 
 ## Commit history
 
@@ -247,4 +291,5 @@ feat(auth): add user model
 feat(auth): add user repository
 feat(auth): add auth validation schemas
 feat(auth): add crypto utilities
+feat(auth): add token service
 ```

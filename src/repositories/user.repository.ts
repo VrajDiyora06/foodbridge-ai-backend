@@ -1,5 +1,4 @@
 import User, {
-  IUser,
   IUserDocument,
   UserRole,
   AccountStatus,
