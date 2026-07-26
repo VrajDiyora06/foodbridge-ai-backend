@@ -494,10 +494,24 @@ Methods implemented:
 Interfaces exported:
 - `CreateReservationData`, `UpdateReservationData`, `ReservationFilters`, `PaginationOptions`, `PaginatedResult<T>`
 
+### Phase 4 — Reservation Module: Reservation validation schemas (completed)
+
+**src/validations/**
+- `reservation.validation.ts` — four Zod schemas for reservation endpoints (`createReservationSchema`, `updateReservationStatusSchema`, `reservationQuerySchema`, `cancelReservationSchema`)
+- `index.ts` — Barrel exports for all validation schemas (`auth`, `food`, `reservation`)
+
+Reusable helper schemas:
+- `objectIdSchema` — validates 24-character Mongo ObjectId regex (`/^[0-9a-fA-F]{24}$/`)
+- `paginationSchema` — page (>=1, default 1), limit (1-100, default 10)
+- `sortSchema` — sortBy (`createdAt`, `updatedAt`, `pickupTime`), sortOrder (`asc`, `desc`, default `desc`)
+
+Exported DTO types:
+- `CreateReservationDto`, `UpdateReservationStatusDto`, `ReservationQueryDto`, `CancelReservationDto`
+
 
 ## What has NOT been built yet
 
-- Reservation validation schemas, service, controller, routes, and Swagger docs
+- Reservation service, controller, routes, and Swagger docs
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -557,8 +571,8 @@ Interfaces exported:
 - **Static route paths before parameterized `/:id` route in Express router** — `/nearby`, `/my`, `/my/statistics` defined before `/:id` so Express doesn't match string literals as ID parameters
 - **Co-located Swagger annotations on food routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 - **Reservation `isActive` virtual & `canCancel()` method** — encapsulates reservation lifecycle validation on the document model
-- **Compound indexes `{ food, status }` and `{ claimer, status }`** — optimizes active reservation lookups and claimer history queries
 - **`findActiveByFood` in ReservationRepository** — queries `status: { $in: ['pending', 'accepted', 'picked_up'] }` to ensure single active claim per food item
+- **Regex-based Mongo ObjectId Zod validator (`objectIdSchema`)** — verifies 24-hex-char MongoDB string ID format across reservation inputs
 
 ## Commit history
 
@@ -582,4 +596,5 @@ feat(food): add food routes
 docs(food): add swagger documentation
 feat(reservation): add reservation model
 feat(reservation): add reservation repository
+feat(reservation): add reservation validation
 ```
