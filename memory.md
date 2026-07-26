@@ -302,13 +302,18 @@ Endpoints mounted:
 - `POST /api/v1/auth/forgot-password` → `validate(forgotPasswordSchema)` → `authController.forgotPassword`
 - `POST /api/v1/auth/reset-password` → `validate(resetPasswordSchema)` → `authController.resetPassword`
 - `POST /api/v1/auth/logout` → `authenticate` → `authController.logout`
-- `GET /api/v1/auth/me` → `authenticate` → `authController.getCurrentUser`
+- `GET /api/v1/auth/me` → `authenticate` → `authController.getCurrentUser`### Phase 2 — Authentication: Swagger documentation (completed)
+
+**src/routes/**
+- `auth.routes.ts` — added full OpenAPI 3.0 JSDoc annotations for all 8 authentication endpoints and 9 component schemas
+
+Documented schemas:
+- `RegisterRequest`, `LoginRequest`, `VerifyEmailRequest`, `RefreshTokenRequest`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `UserResponse`, `AuthResponse`, `ErrorResponse`
 
 
 ## What has NOT been built yet
 
 - Auth rate limiting (stricter limiter on auth routes)
-- Swagger OpenAPI annotations for auth endpoints
 - Donation/food listing models and CRUD
 - BullMQ job queues
 - Socket.IO real-time events
@@ -356,6 +361,7 @@ Endpoints mounted:
 - **Verification token returned in response only in development** — in production it would be emailed, not exposed in API
 - **Thin controllers using class arrow properties** — `register = asyncHandler(...)` ensures `this` binding remains intact when passed as route handlers
 - **Auth middleware checks Redis blacklist** — `authenticate` checks `isAccessTokenBlacklisted` so logged-out tokens are immediately invalid
+- **Swagger schemas embedded in auth routes** — keeps route definitions and OpenAPI schemas co-located for easy maintenance
 
 ## Commit history
 
@@ -369,4 +375,5 @@ feat(auth): add token service
 feat(auth): add auth service
 feat(auth): add auth controller
 feat(auth): add auth routes
+docs(auth): add swagger documentation
 ```
