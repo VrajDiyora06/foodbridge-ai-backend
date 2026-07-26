@@ -237,9 +237,40 @@ Internal helper:
 | GET | /api/v1/health | Health check (Mongo + Redis ping) | Done |
 | GET | /api/v1/docs | Swagger UI | Done |
 
+### Phase 2 — Authentication: Auth service (completed)
+
+**src/services/**
+- `auth.service.ts` — authentication business logic orchestrating UserRepository, TokenService, and bcryptjs
+
+Dependencies:
+- `bcryptjs` + `@types/bcryptjs` (installed this milestone)
+- `UserRepository` (data access)
+- `TokenService` (JWT + Redis)
+- `AppError` (error handling)
+- `env` (config)
+
+Public methods:
+- `register(dto)` — check email uniqueness, hash password, create user, generate verification token. Returns user + verification token (dev only).
+- `verifyEmail(token)` — lookup Redis token, mark user verified, delete token
+- `login(dto)` — find user with password, bcrypt compare, check active + verified, generate access + refresh tokens, store refresh, fire-and-forget lastLogin update. Returns user + token pair.
+- `refreshToken(refreshToken)` — verify JWT, validate Redis, rotate (delete old, issue new), check user active. Returns new token pair. Detects reuse: revokes all sessions.
+- `forgotPassword(email)` — never reveals user existence, generates reset token if user exists, always returns same message
+- `resetPassword(dto)` — validate reset token, hash new password, update password, revoke all refresh tokens, delete reset token
+- `logout(accessPayload, refreshToken)` — blacklist access token (remaining TTL), revoke refresh token
+- `getCurrentUser(userId)` — fetch user by ID, throw if not found
+
+Response types exported:
+- `AuthTokens` — `{ accessToken, refreshToken }`
+- `RegisterResult` — `{ user, verificationToken? }`
+- `LoginResult` — `{ user, accessToken, refreshToken }`
+- `RefreshResult` — `{ accessToken, refreshToken }`
+
+**Modified files:**
+- `package.json` — added `bcryptjs` and `@types/bcryptjs`
+
+
 ## What has NOT been built yet
 
-- Auth service (registration, login, refresh, password flows)
 - Auth controller and routes
 - Auth middleware (JWT verification, role guard)
 - Auth rate limiting
@@ -282,6 +313,12 @@ Internal helper:
 - **SCAN with cursor pagination for `revokeAllUserRefreshTokens`** — never uses KEYS (blocks Redis); SCAN is non-blocking and paginates in batches of 100
 - **Blacklist TTL = remaining access token life** — blacklist entries auto-expire when the token would have expired anyway, keeping Redis memory bounded
 - **Verification/reset tokens are 64-char hex strings stored as Redis keys** — not JWTs, because they're single-use and need server-side revocation
+- **Same error message for wrong email and wrong password on login** — prevents user enumeration via error message differentiation
+- **Refresh token reuse detection** — if a token is valid JWT but absent from Redis, all user sessions are revoked as a precaution
+- **`forgotPassword` always returns same message** — "If an account with that email exists..." prevents email enumeration
+- **`updateLastLogin` is fire-and-forget** — doesn't block the login response; failure is logged but doesn't affect the user
+- **Password reset revokes all refresh tokens** — forces re-login on all devices after a password change
+- **Verification token returned in response only in development** — in production it would be emailed, not exposed in API
 
 ## Commit history
 
@@ -292,4 +329,5 @@ feat(auth): add user repository
 feat(auth): add auth validation schemas
 feat(auth): add crypto utilities
 feat(auth): add token service
+feat(auth): add auth service
 ```
