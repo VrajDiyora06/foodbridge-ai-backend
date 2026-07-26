@@ -471,10 +471,33 @@ Indexes created:
 - Compound `{ food: 1, status: 1 }`
 - Compound `{ claimer: 1, status: 1 }`
 
+### Phase 4 — Reservation Module: Reservation repository (completed)
+
+**src/repositories/**
+- `reservation.repository.ts` — 12 data access methods for Reservation model (`ReservationRepository` class & exported singleton `reservationRepository`)
+- `index.ts` — Barrel exports for repositories (`UserRepository`, `FoodRepository`, `ReservationRepository`, `reservationRepository`)
+
+Methods implemented:
+- `create(data)` — insert new reservation claim
+- `findById(id)` — find reservation using `.lean()`
+- `findByIdWithRelations(id)` — find reservation populated with `food` and `claimer` details
+- `findActiveByFood(foodId)` — find reservation where `food` matches and `status` IN `[pending, accepted, picked_up]`
+- `findByClaimer(claimerId, pagination, filters)` — paginated list of claimer's reservations populated with `food` details
+- `findByFood(foodId)` — list of all reservations for a specific food item populated with `claimer` details
+- `update(id, data)` — update reservation fields
+- `updateStatus(id, status)` — update reservation status
+- `delete(id)` — delete reservation document
+- `countByStatus(status)` — count total reservations by status
+- `countByClaimer(claimerId)` — count total reservations by claimer
+- `countByFood(foodId)` — count total reservations for a food listing
+
+Interfaces exported:
+- `CreateReservationData`, `UpdateReservationData`, `ReservationFilters`, `PaginationOptions`, `PaginatedResult<T>`
+
 
 ## What has NOT been built yet
 
-- Reservation repository, validation schemas, service, controller, routes, and Swagger docs
+- Reservation validation schemas, service, controller, routes, and Swagger docs
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -535,6 +558,7 @@ Indexes created:
 - **Co-located Swagger annotations on food routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 - **Reservation `isActive` virtual & `canCancel()` method** — encapsulates reservation lifecycle validation on the document model
 - **Compound indexes `{ food, status }` and `{ claimer, status }`** — optimizes active reservation lookups and claimer history queries
+- **`findActiveByFood` in ReservationRepository** — queries `status: { $in: ['pending', 'accepted', 'picked_up'] }` to ensure single active claim per food item
 
 ## Commit history
 
@@ -557,4 +581,5 @@ feat(food): add food controller
 feat(food): add food routes
 docs(food): add swagger documentation
 feat(reservation): add reservation model
+feat(reservation): add reservation repository
 ```
