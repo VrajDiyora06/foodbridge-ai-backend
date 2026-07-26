@@ -528,10 +528,30 @@ Methods implemented:
 Exported interfaces & singleton:
 - `ReservationStatistics`, `reservationService`
 
+### Phase 4 — Reservation Module: Reservation controller (completed)
+
+**src/controllers/**
+- `reservation.controller.ts` — thin HTTP request handlers delegating to `ReservationService` and returning uniform `ApiResponse` envelopes
+- `index.ts` — Barrel exports for controllers (`getHealth`, `AuthController`, `authController`, `FoodController`, `foodController`, `ReservationController`, `reservationController`)
+
+Controller methods:
+- `createReservation` — POST /api/v1/reservations (201 Created)
+- `getReservationById` — GET /api/v1/reservations/:id (200 OK)
+- `getMyReservations` — GET /api/v1/reservations/my (200 OK paginated)
+- `acceptReservation` — PATCH /api/v1/reservations/:id/accept (200 OK)
+- `rejectReservation` — PATCH /api/v1/reservations/:id/reject (200 OK)
+- `cancelReservation` — PATCH /api/v1/reservations/:id/cancel (200 OK)
+- `markPickedUp` — PATCH /api/v1/reservations/:id/pickup (200 OK)
+- `completeReservation` — PATCH /api/v1/reservations/:id/complete (200 OK)
+- `getReservationStatistics` — GET /api/v1/reservations/my/statistics (200 OK)
+
+Exported class & singleton:
+- `ReservationController`, `reservationController`
+
 
 ## What has NOT been built yet
 
-- Reservation controller, routes, and Swagger docs
+- Reservation routes and Swagger docs
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -595,6 +615,7 @@ Exported interfaces & singleton:
 - **Regex-based Mongo ObjectId Zod validator (`objectIdSchema`)** — verifies 24-hex-char MongoDB string ID format across reservation inputs
 - **Strict Reservation State Machine** — `PENDING` → `ACCEPTED`/`REJECTED`/`CANCELLED`; `ACCEPTED` → `PICKED_UP`/`CANCELLED`; `PICKED_UP` → `COMPLETED`
 - **Automatic Food Status Sync** — accepting/creating reservation updates food to `RESERVED`, rejecting/cancelling returns food to `AVAILABLE`, picking up sets `PICKED_UP`, completing sets `DELIVERED`
+- **Clean separation of Donor actions vs Claimer actions** — `accept`, `reject`, `pickup`, `complete` handled by food donor owner; `cancel` handled by claimer owner
 
 ## Commit history
 
@@ -620,4 +641,5 @@ feat(reservation): add reservation model
 feat(reservation): add reservation repository
 feat(reservation): add reservation validation
 feat(reservation): add reservation service
+feat(reservation): add reservation controller
 ```
