@@ -284,7 +284,9 @@ Controller methods:
 Key design details:
 - Every async method wrapped with `asyncHandler` to forward unhandled promise rejections
 - Thin layer with 0 business logic, 0 db queries, 0 direct JWT/crypto/bcrypt usage
-- Exports `AuthController` class and singleton `authController` instance### Phase 2 — Authentication: Auth middleware & routes (completed)
+- Exports `AuthController` class and singleton `authController` instance
+
+### Phase 2 — Authentication: Auth middleware & routes (completed)
 
 **src/middlewares/**
 - `auth.middleware.ts` — `authenticate` (verifies JWT access token + checks Redis blacklist) and `authorize` (RBAC guard for allowed roles)
@@ -302,7 +304,9 @@ Endpoints mounted:
 - `POST /api/v1/auth/forgot-password` → `validate(forgotPasswordSchema)` → `authController.forgotPassword`
 - `POST /api/v1/auth/reset-password` → `validate(resetPasswordSchema)` → `authController.resetPassword`
 - `POST /api/v1/auth/logout` → `authenticate` → `authController.logout`
-- `GET /api/v1/auth/me` → `authenticate` → `authController.getCurrentUser`### Phase 2 — Authentication: Swagger documentation (completed)
+- `GET /api/v1/auth/me` → `authenticate` → `authController.getCurrentUser`
+
+### Phase 2 — Authentication: Swagger documentation (completed)
 
 **src/routes/**
 - `auth.routes.ts` — added full OpenAPI 3.0 JSDoc annotations for all 8 authentication endpoints and 9 component schemas
@@ -310,11 +314,39 @@ Endpoints mounted:
 Documented schemas:
 - `RegisterRequest`, `LoginRequest`, `VerifyEmailRequest`, `RefreshTokenRequest`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `UserResponse`, `AuthResponse`, `ErrorResponse`
 
+### Phase 3 — Food Redistribution: Food listing model (completed)
+
+**src/models/**
+- `food.model.ts` — Mongoose schema for food listings created by donors
+
+Enums:
+- `FoodCategory`: cooked, raw, packaged, bakery, dairy, beverages, fruits, vegetables, grains, snacks, other
+- `FoodStatus`: available, reserved, picked_up, delivered, expired, cancelled
+
+Interfaces:
+- `ICoordinates` — `{ latitude: number, longitude: number }`
+- `ILocation` — `{ address, city, state, postalCode, country, coordinates }`
+- `IFood` — plain data shape
+- `IFoodDocument` — extends IFood + Document, includes virtuals and instance methods
+
+Virtuals:
+- `isExpired` — boolean getter (`new Date() > expiresAt`)
+
+Instance Methods:
+- `canBeReserved()` — returns `status === FoodStatus.AVAILABLE && !isExpired`
+
+Indexes:
+- Single field: `donor`, `status`, `category`, `expiresAt`
+- Geospatial: `location.coordinates` (2dsphere index for location-based search)
+- Compound: `{ status: 1, expiresAt: 1 }` (for active/available non-expired listings)
+
 
 ## What has NOT been built yet
 
+- Food repository (data access layer)
+- Food validation schemas (Zod)
+- Food service, controller, and routes
 - Auth rate limiting (stricter limiter on auth routes)
-- Donation/food listing models and CRUD
 - BullMQ job queues
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
@@ -362,6 +394,8 @@ Documented schemas:
 - **Thin controllers using class arrow properties** — `register = asyncHandler(...)` ensures `this` binding remains intact when passed as route handlers
 - **Auth middleware checks Redis blacklist** — `authenticate` checks `isAccessTokenBlacklisted` so logged-out tokens are immediately invalid
 - **Swagger schemas embedded in auth routes** — keeps route definitions and OpenAPI schemas co-located for easy maintenance
+- **Geospatial 2dsphere index on `location.coordinates`** — enables proximity queries (finding nearby available food donations)
+- **`isExpired` virtual & `canBeReserved()` instance method** — encapsulates state logic directly on the model
 
 ## Commit history
 
@@ -376,4 +410,5 @@ feat(auth): add auth service
 feat(auth): add auth controller
 feat(auth): add auth routes
 docs(auth): add swagger documentation
+feat(food): add food listing model
 ```
