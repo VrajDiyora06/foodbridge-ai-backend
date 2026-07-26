@@ -266,12 +266,30 @@ Response types exported:
 - `RefreshResult` — `{ accessToken, refreshToken }`
 
 **Modified files:**
-- `package.json` — added `bcryptjs` and `@types/bcryptjs`
+- `package.json` — added `bcryptjs` and `@types/bcryptjs`### Phase 2 — Authentication: Auth controller (completed)
+
+**src/controllers/**
+- `auth.controller.ts` — thin HTTP request handlers delegating to `AuthService` and returning uniform `ApiResponse` envelopes
+
+Controller methods:
+- `register` — POST /api/v1/auth/register (201 Created)
+- `verifyEmail` — POST /api/v1/auth/verify-email (200 OK)
+- `login` — POST /api/v1/auth/login (200 OK)
+- `refreshToken` — POST /api/v1/auth/refresh-token (200 OK)
+- `forgotPassword` — POST /api/v1/auth/forgot-password (200 OK)
+- `resetPassword` — POST /api/v1/auth/reset-password (200 OK)
+- `logout` — POST /api/v1/auth/logout (200 OK)
+- `getCurrentUser` — GET /api/v1/auth/me (200 OK)
+
+Key design details:
+- Every async method wrapped with `asyncHandler` to forward unhandled promise rejections
+- Thin layer with 0 business logic, 0 db queries, 0 direct JWT/crypto/bcrypt usage
+- Exports `AuthController` class and singleton `authController` instance
 
 
 ## What has NOT been built yet
 
-- Auth controller and routes
+- Auth routes (mounting validate middleware + authController)
 - Auth middleware (JWT verification, role guard)
 - Auth rate limiting
 - Donation/food listing models and CRUD
@@ -319,6 +337,7 @@ Response types exported:
 - **`updateLastLogin` is fire-and-forget** — doesn't block the login response; failure is logged but doesn't affect the user
 - **Password reset revokes all refresh tokens** — forces re-login on all devices after a password change
 - **Verification token returned in response only in development** — in production it would be emailed, not exposed in API
+- **Thin controllers using class arrow properties** — `register = asyncHandler(...)` ensures `this` binding remains intact when passed as route handlers
 
 ## Commit history
 
@@ -330,4 +349,5 @@ feat(auth): add auth validation schemas
 feat(auth): add crypto utilities
 feat(auth): add token service
 feat(auth): add auth service
+feat(auth): add auth controller
 ```
