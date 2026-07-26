@@ -417,10 +417,27 @@ Controller methods:
 Exported class & singleton:
 - `FoodController`, `foodController`
 
+### Phase 3 — Food Redistribution: Food routes (completed)
+
+**src/routes/**
+- `food.routes.ts` — Express router mapping 9 food endpoints to validation schemas, auth/RBAC middlewares, and `foodController`
+- Mounted in `src/routes/index.ts` under `/food` (effective URL path `/api/v1/food`)
+
+Endpoints mounted:
+- `GET /api/v1/food` → `validate(foodQuerySchema)` → `foodController.getAvailableFood`
+- `GET /api/v1/food/nearby` → `validate(foodQuerySchema)` → `foodController.getNearbyFood`
+- `GET /api/v1/food/my` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(foodQuerySchema)` → `foodController.getMyFood`
+- `GET /api/v1/food/my/statistics` → `authenticate` → `authorize(DONOR, ADMIN)` → `foodController.getFoodStatistics`
+- `GET /api/v1/food/:id` → `foodController.getFoodById`
+- `POST /api/v1/food` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(createFoodSchema)` → `foodController.createFood`
+- `PATCH /api/v1/food/:id` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateFoodSchema)` → `foodController.updateFood`
+- `PATCH /api/v1/food/:id/status` → `authenticate` → `authorize(DONOR, ADMIN)` → `validate(updateFoodStatusSchema)` → `foodController.updateFoodStatus`
+- `DELETE /api/v1/food/:id` → `authenticate` → `authorize(DONOR, ADMIN)` → `foodController.deleteFood`
+
 
 ## What has NOT been built yet
 
-- Food routes (mounting validation schemas + auth middleware + foodController)
+- Swagger OpenAPI annotations for Food module
 - Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
@@ -477,6 +494,7 @@ Exported class & singleton:
 - **Strict food status transition state machine** — enforces terminal states (`EXPIRED`, `DELIVERED`, `CANCELLED`) and allowed forward transitions
 - **Ownership verification in food service** — safely extracts donor ID whether `food.donor` is populated as an object or stored as an ObjectId
 - **ApiResponse.paginated used for all paginated listing endpoints** — formats data array and metadata (`page`, `limit`, `total`, `totalPages`) consistently
+- **Static route paths before parameterized `/:id` route in Express router** — `/nearby`, `/my`, `/my/statistics` defined before `/:id` so Express doesn't match string literals as ID parameters
 
 ## Commit history
 
@@ -496,4 +514,5 @@ feat(food): add food repository
 feat(food): add food validation schemas
 feat(food): add food service
 feat(food): add food controller
+feat(food): add food routes
 ```
