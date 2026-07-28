@@ -647,10 +647,23 @@ Endpoints documented:
 **Config**
 - `env.config.ts` & `.env.example` — added `smtpHost`, `smtpPort`, `smtpUser`, `smtpPassword`, `smtpFromName`, `smtpFromEmail`
 
+### Phase 5 — Security & Infrastructure: Socket.IO Infrastructure (completed)
+
+**src/socket/**
+- `socketManager.ts` — `SocketManager` singleton supporting `initialize(server)`, `getIO()`, and graceful async `close()`. Configured with CORS matching `env.corsOrigin` and ping parameters
+- `events/connection.event.ts` — handles client connection events, tracks connection counts, logs socket IDs via Winston, and registers disconnect handlers
+- `events/disconnect.event.ts` — handles client disconnection events, logs socket ID and disconnect reason via Winston
+- `socket.ts` — re-exported `socketManager`, `SocketManager`, `handleConnection`, `registerDisconnectHandler`
+
+**src/server.ts**
+- Startup: calls `socketManager.initialize(server)` after HTTP server launch
+- Graceful shutdown: calls `await socketManager.close()` during graceful shutdown sequence
+
 
 ## What has NOT been built yet
 
-- Socket.IO real-time events
+- Real-time event emitters (food updates, reservation updates, notifications)
+- Socket JWT Authentication Middleware
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
 
@@ -720,6 +733,7 @@ Endpoints documented:
 - **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
 - **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
 - **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
+- **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
 
 ## Commit history
 
@@ -755,4 +769,5 @@ feat(queue): add reservation expiry worker
 feat(queue): add email worker
 feat(queue): integrate background job scheduling
 feat(email): integrate SMTP email delivery
+feat(socket): add Socket.IO infrastructure
 ```

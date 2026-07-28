@@ -11,6 +11,7 @@ import {
   initEmailWorker,
   closeEmailWorker,
 } from './jobs';
+import { socketManager } from './socket/socketManager';
 import logger from './utils/logger';
 
 const startServer = async () => {
@@ -28,6 +29,9 @@ const startServer = async () => {
     logger.info(`API docs: http://localhost:${env.port}${env.apiPrefix}/docs`);
   });
 
+  // ── Initialize Socket.IO ───────────────────────────────
+  socketManager.initialize(server);
+
   // ── Graceful shutdown ──────────────────────────────────
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down gracefully`);
@@ -35,6 +39,7 @@ const startServer = async () => {
     server.close(async () => {
       logger.info('HTTP server closed');
 
+      await socketManager.close();
       await closeEmailWorker();
       await closeReservationExpiryWorker();
       await closeFoodExpiryWorker();

@@ -1,0 +1,76 @@
+import { Server as HttpServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import env from '../config/env.config';
+import logger from '../utils/logger';
+import { handleConnection } from './events/connection.event';
+
+export class SocketManager {
+  private io: SocketIOServer | null = null;
+
+  /**
+   * Initialize Socket.IO instance attached to the HTTP server.
+   */
+  public initialize(server: HttpServer): SocketIOServer {
+    if (this.io) {
+      logger.warn('[Socket.IO] SocketManager is already initialized');
+      return this.io;
+    }
+
+    this.io = new SocketIOServer(server, {
+      cors: {
+        origin: env.corsOrigin,
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
+      pingTimeout: 60000,
+      pingInterval: 25000,
+    });
+
+    // ── Placeholder for Socket.IO authentication middleware ────
+    // Future JWT authentication middleware will be mounted here:
+    // this.io.use((socket, next) => {
+    //   // Verify JWT access token attached to socket handshake
+    //   next();
+    // });
+    // ──────────────────────────────────────────────────────────
+
+    // Register root connection listener
+    this.io.on('connection', (socket) => {
+      handleConnection(this.io!, socket);
+    });
+
+    logger.info('[Socket.IO] SocketManager initialized successfully');
+    return this.io;
+  }
+
+  /**
+   * Retrieve the active Socket.IO Server instance.
+   * Throws an error if invoked before initialization.
+   */
+  public getIO(): SocketIOServer {
+    if (!this.io) {
+      throw new Error(
+        '[Socket.IO] SocketManager has not been initialized yet. Call initialize(server) first.',
+      );
+    }
+    return this.io;
+  }
+
+  /**
+   * Gracefully close all socket connections and the Socket.IO server.
+   */
+  public async close(): Promise<void> {
+    if (this.io) {
+      logger.info('[Socket.IO] Closing Socket.IO server and disconnecting clients...');
+      await new Promise<void>((resolve) => {
+        this.io!.close(() => {
+          logger.info('[Socket.IO] Socket.IO server closed successfully');
+          resolve();
+        });
+      });
+      this.io = null;
+    }
+  }
+}
+
+export const socketManager = new SocketManager();
