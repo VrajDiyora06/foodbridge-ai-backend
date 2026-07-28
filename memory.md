@@ -671,11 +671,16 @@ Endpoints documented:
 - `events/disconnect.event.ts` — updated disconnect logging to include `userId`
 - `socket.ts` — re-exported `socketAuthMiddleware` and `SocketUserContext`
 
+### Phase 6 — CI/CD & Deployment: GitHub Actions Pipeline (completed)
+
+**.github/workflows/**
+- `ci.yml` — automated CI workflow triggering on `push` and `pull_request` to `main` and `develop` branches. Built with Node.js 22 LTS, npm dependency caching, `npm ci`, `npm run lint` (ESLint), `npm run build` (TypeScript compiler), `npm run test:coverage` (Jest), and automated coverage report artifact upload (`actions/upload-artifact@v4`). Includes structured extension points for future Docker image build/push and container deployment stages.
+
 
 ## What has NOT been built yet
 
-- GitHub Actions CI/CD pipeline
-- Integration/e2e tests
+- Integration/e2e test suite (API supertest)
+- Production Docker container registry push & CD deployment workflow
 
 ## Key decisions
 
@@ -742,7 +747,6 @@ Endpoints documented:
 - **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
 - **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
 - **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
-- **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
 - **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 - **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
 - **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
@@ -754,6 +758,7 @@ Endpoints documented:
 - **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
 - **Non-blocking Real-Time Business Event Emitters** — decoupled socket event functions for food (`food:created`, `food:updated`, `food:deleted`, `food:expired`) and reservations (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`), wrapped in try/catch to ensure API reliability
 - **Strict Socket.IO JWT Handshake Authentication** — validates JWT signature, Redis blacklist revocation, MongoDB user record, and `AccountStatus.ACTIVE`, populating `socket.data.user` and auto-joining `user:${userId}` and `role:${role}` rooms
+- **Modular GitHub Actions CI Pipeline** — Node.js 22 LTS environment, npm dependency caching, strict fail-fast execution (lint, build, test), coverage artifact uploading, and commented extension blocks for Docker build/push and CD deployment
 
 ## Commit history
 
@@ -792,4 +797,5 @@ feat(email): integrate SMTP email delivery
 feat(socket): add Socket.IO infrastructure
 feat(socket): add real-time business events
 feat(socket): add JWT socket authentication
+ci: add GitHub Actions continuous integration
 ```
