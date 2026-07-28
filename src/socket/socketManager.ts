@@ -57,6 +57,34 @@ export class SocketManager {
   }
 
   /**
+   * Broadcast an event and payload to all connected socket clients.
+   * Safe to invoke even if Socket.IO is not initialized (logs warning instead of throwing).
+   */
+  public emit(eventName: string, payload: unknown): void {
+    try {
+      if (!this.io) {
+        logger.warn(`[Socket.IO] Cannot emit event '${eventName}' — SocketManager is not initialized`);
+        return;
+      }
+      this.io.emit(eventName, payload);
+      logger.debug(`[Socket.IO] Emitted event '${eventName}'`, { eventName });
+    } catch (error) {
+      const err = error as Error;
+      logger.error(`[Socket.IO] Failed to emit event '${eventName}': ${err.message}`, {
+        eventName,
+        error: err.message,
+      });
+    }
+  }
+
+  /**
+   * Alias for emit — broadcasts event to all connected clients.
+   */
+  public broadcast(eventName: string, payload: unknown): void {
+    this.emit(eventName, payload);
+  }
+
+  /**
    * Gracefully close all socket connections and the Socket.IO server.
    */
   public async close(): Promise<void> {

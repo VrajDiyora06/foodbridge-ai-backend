@@ -15,6 +15,14 @@ import { UserRepository } from '../repositories/user.repository';
 import { AppError } from '../utils/appError';
 import logger from '../utils/logger';
 import { addReservationExpiryJob } from '../jobs';
+import {
+  emitReservationCreated,
+  emitReservationAccepted,
+  emitReservationRejected,
+  emitReservationCancelled,
+  emitReservationPickedUp,
+  emitReservationCompleted,
+} from '../socket/events/reservation.events';
 import type {
   CreateReservationDto,
   ReservationQueryDto,
@@ -121,6 +129,8 @@ export class ReservationService {
       });
     }
 
+    emitReservationCreated(reservation);
+
     return reservation;
   }
 
@@ -196,6 +206,8 @@ export class ReservationService {
 
     await this.foodRepo.updateStatus(food._id.toString(), FoodStatus.RESERVED);
 
+    emitReservationAccepted(updatedReservation);
+
     return updatedReservation;
   }
 
@@ -238,6 +250,8 @@ export class ReservationService {
     }
 
     await this.foodRepo.updateStatus(food._id.toString(), FoodStatus.AVAILABLE);
+
+    emitReservationRejected(updatedReservation);
 
     return updatedReservation;
   }
@@ -289,6 +303,8 @@ export class ReservationService {
       FoodStatus.AVAILABLE,
     );
 
+    emitReservationCancelled(updatedReservation);
+
     return updatedReservation;
   }
 
@@ -331,6 +347,8 @@ export class ReservationService {
     }
 
     await this.foodRepo.updateStatus(food._id.toString(), FoodStatus.PICKED_UP);
+
+    emitReservationPickedUp(updatedReservation);
 
     return updatedReservation;
   }
@@ -375,6 +393,8 @@ export class ReservationService {
     }
 
     await this.foodRepo.updateStatus(food._id.toString(), FoodStatus.DELIVERED);
+
+    emitReservationCompleted(updatedReservation);
 
     return updatedReservation;
   }

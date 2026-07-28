@@ -1,3 +1,5 @@
 export { socketManager, SocketManager } from './socketManager';
 export { handleConnection } from './events/connection.event';
 export { registerDisconnectHandler } from './events/disconnect.event';
+export * from './events/food.events';
+export * from './events/reservation.events';

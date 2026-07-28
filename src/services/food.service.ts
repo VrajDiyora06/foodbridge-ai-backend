@@ -11,6 +11,12 @@ import { UserRepository } from '../repositories/user.repository';
 import { AppError } from '../utils/appError';
 import logger from '../utils/logger';
 import { addFoodExpiryJob } from '../jobs';
+import {
+  emitFoodCreated,
+  emitFoodUpdated,
+  emitFoodDeleted,
+  emitFoodExpired,
+} from '../socket/events/food.events';
 import type {
   CreateFoodDto,
   UpdateFoodDto,
@@ -74,6 +80,8 @@ export class FoodService {
         error: (err as Error).message,
       });
     }
+
+    emitFoodCreated(food);
 
     return food;
   }
@@ -186,6 +194,8 @@ export class FoodService {
       }
     }
 
+    emitFoodUpdated(updatedFood);
+
     return updatedFood;
   }
 
@@ -208,6 +218,12 @@ export class FoodService {
     const updatedFood = await this.foodRepo.updateStatus(foodId, status);
     if (!updatedFood) {
       throw new AppError('Failed to update food status', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+
+    emitFoodUpdated(updatedFood);
+
+    if (status === FoodStatus.EXPIRED) {
+      emitFoodExpired(foodId);
     }
 
     return updatedFood;
@@ -233,6 +249,7 @@ export class FoodService {
     }
 
     await this.foodRepo.delete(foodId);
+    emitFoodDeleted(foodId);
   }
 
   /**

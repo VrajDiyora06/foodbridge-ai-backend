@@ -647,22 +647,22 @@ Endpoints documented:
 **Config**
 - `env.config.ts` & `.env.example` — added `smtpHost`, `smtpPort`, `smtpUser`, `smtpPassword`, `smtpFromName`, `smtpFromEmail`
 
-### Phase 5 — Security & Infrastructure: Socket.IO Infrastructure (completed)
+### Phase 5 — Security & Infrastructure: Real-Time Business Events (completed)
 
-**src/socket/**
-- `socketManager.ts` — `SocketManager` singleton supporting `initialize(server)`, `getIO()`, and graceful async `close()`. Configured with CORS matching `env.corsOrigin` and ping parameters
-- `events/connection.event.ts` — handles client connection events, tracks connection counts, logs socket IDs via Winston, and registers disconnect handlers
-- `events/disconnect.event.ts` — handles client disconnection events, logs socket ID and disconnect reason via Winston
-- `socket.ts` — re-exported `socketManager`, `SocketManager`, `handleConnection`, `registerDisconnectHandler`
+**src/socket/events/**
+- `food.events.ts` — reusable event emitters for food listings (`food:created`, `food:updated`, `food:deleted`, `food:expired`)
+- `reservation.events.ts` — reusable event emitters for reservation claims (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`)
 
-**src/server.ts**
-- Startup: calls `socketManager.initialize(server)` after HTTP server launch
-- Graceful shutdown: calls `await socketManager.close()` during graceful shutdown sequence
+**Service Integration**
+- `food.service.ts` — emits `food:created` in `createFood`, `food:updated` in `updateFood` & `updateFoodStatus`, `food:expired` on status `EXPIRED`, `food:deleted` in `deleteFood`
+- `reservation.service.ts` — emits `reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed` upon successful state transitions
+
+**SocketManager**
+- `socketManager.ts` — added safe `emit(eventName, payload)` and `broadcast(eventName, payload)` helper methods with try/catch and Winston logging
 
 
 ## What has NOT been built yet
 
-- Real-time event emitters (food updates, reservation updates, notifications)
 - Socket JWT Authentication Middleware
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
@@ -734,6 +734,7 @@ Endpoints documented:
 - **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
 - **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
 - **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
+- **Non-blocking Real-Time Business Event Emitters** — decoupled socket event functions for food (`food:created`, `food:updated`, `food:deleted`, `food:expired`) and reservations (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`), wrapped in try/catch to ensure API reliability
 
 ## Commit history
 
@@ -770,4 +771,5 @@ feat(queue): add email worker
 feat(queue): integrate background job scheduling
 feat(email): integrate SMTP email delivery
 feat(socket): add Socket.IO infrastructure
+feat(socket): add real-time business events
 ```
