@@ -13,6 +13,8 @@ import {
 import { FoodRepository } from '../repositories/food.repository';
 import { UserRepository } from '../repositories/user.repository';
 import { AppError } from '../utils/appError';
+import logger from '../utils/logger';
+import { addReservationExpiryJob } from '../jobs';
 import type {
   CreateReservationDto,
   ReservationQueryDto,
@@ -105,6 +107,19 @@ export class ReservationService {
     });
 
     await this.foodRepo.updateStatus(dto.foodId, FoodStatus.RESERVED);
+
+    try {
+      const delay = Math.max(0, new Date(food.expiresAt).getTime() - Date.now());
+      await addReservationExpiryJob(
+        { reservationId: reservation._id.toString() },
+        { delay, jobId: `reservation-expiry-${reservation._id}` },
+      );
+    } catch (err) {
+      logger.error('Failed to enqueue reservation expiry job', {
+        reservationId: reservation._id,
+        error: (err as Error).message,
+      });
+    }
 
     return reservation;
   }

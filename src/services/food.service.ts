@@ -9,6 +9,8 @@ import {
 } from '../repositories/food.repository';
 import { UserRepository } from '../repositories/user.repository';
 import { AppError } from '../utils/appError';
+import logger from '../utils/logger';
+import { addFoodExpiryJob } from '../jobs';
 import type {
   CreateFoodDto,
   UpdateFoodDto,
@@ -59,6 +61,19 @@ export class FoodService {
       ...dto,
       donor: donorId,
     });
+
+    try {
+      const delay = Math.max(0, new Date(food.expiresAt).getTime() - Date.now());
+      await addFoodExpiryJob(
+        { foodId: food._id.toString() },
+        { delay, jobId: `food-expiry-${food._id}` },
+      );
+    } catch (err) {
+      logger.error('Failed to enqueue food expiry job', {
+        foodId: food._id,
+        error: (err as Error).message,
+      });
+    }
 
     return food;
   }
@@ -154,6 +169,21 @@ export class FoodService {
     const updatedFood = await this.foodRepo.update(foodId, dto);
     if (!updatedFood) {
       throw new AppError('Failed to update food listing', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+
+    if (dto.expiresAt) {
+      try {
+        const delay = Math.max(0, new Date(updatedFood.expiresAt).getTime() - Date.now());
+        await addFoodExpiryJob(
+          { foodId: updatedFood._id.toString() },
+          { delay, jobId: `food-expiry-${updatedFood._id}` },
+        );
+      } catch (err) {
+        logger.error('Failed to reschedule food expiry job', {
+          foodId: updatedFood._id,
+          error: (err as Error).message,
+        });
+      }
     }
 
     return updatedFood;

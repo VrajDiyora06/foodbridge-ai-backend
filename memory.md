@@ -635,6 +635,15 @@ Endpoints documented:
 - Startup: calls `initEmailWorker()`
 - Graceful shutdown: calls `await closeEmailWorker()`
 
+### Phase 5 — Security & Infrastructure: Service-layer queue integration (completed)
+
+**src/services/**
+- `auth.service.ts` — enqueues verification email (`addEmailJob`) in `register()` and password reset email (`addEmailJob`) in `forgotPassword()`
+- `food.service.ts` — enqueues delayed food expiry job (`addFoodExpiryJob`) in `createFood()` and reschedules expiry job in `updateFood()` when `expiresAt` is updated
+- `reservation.service.ts` — enqueues delayed reservation expiry job (`addReservationExpiryJob`) in `createReservation()`
+
+All enqueue calls are wrapped in non-blocking `try/catch` blocks so background queue errors never crash or fail primary HTTP business API operations.
+
 
 ## What has NOT been built yet
 
@@ -707,6 +716,7 @@ Endpoints documented:
 - **Idempotent Food Expiry Worker** — skips missing or already-terminal listings (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates expired items via `FoodRepository.updateStatus`, configured with 3 retries & exponential backoff
 - **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
 - **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
+- **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
 
 ## Commit history
 
@@ -740,4 +750,5 @@ feat(queue): add BullMQ infrastructure
 feat(queue): add food expiry worker
 feat(queue): add reservation expiry worker
 feat(queue): add email worker
+feat(queue): integrate background job scheduling
 ```

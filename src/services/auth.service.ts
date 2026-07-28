@@ -7,6 +7,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { TokenService, AccessTokenPayload } from './token.service';
 import { IUserDocument, AccountStatus } from '../models/user.model';
 import type { RegisterDto, LoginDto, ResetPasswordDto } from '../validations/auth.validation';
+import { addEmailJob } from '../jobs';
 
 // ── Response types ───────────────────────────────────────
 
@@ -64,6 +65,26 @@ export class AuthService {
     );
 
     logger.info('User registered', { userId: user._id, email: user.email });
+
+    // Enqueue email verification job
+    try {
+      await addEmailJob({
+        type: 'VERIFICATION_EMAIL',
+        to: user.email,
+        subject: 'Verify your FoodBridge AI account',
+        template: 'verify-email',
+        data: {
+          name: user.name,
+          verificationToken,
+          clientUrl: env.clientUrl,
+        },
+      });
+    } catch (err) {
+      logger.error('Failed to enqueue verification email job', {
+        userId: user._id,
+        error: (err as Error).message,
+      });
+    }
 
     // In production the token would be emailed, not returned in the response.
     // We expose it in development so the flow can be tested without SMTP.
@@ -192,6 +213,26 @@ export class AuthService {
     const resetToken = await this.tokenService.storePasswordResetToken(
       user._id.toString(),
     );
+
+    // Enqueue password reset email job
+    try {
+      await addEmailJob({
+        type: 'PASSWORD_RESET',
+        to: user.email,
+        subject: 'Reset your FoodBridge AI password',
+        template: 'reset-password',
+        data: {
+          name: user.name,
+          resetToken,
+          clientUrl: env.clientUrl,
+        },
+      });
+    } catch (err) {
+      logger.error('Failed to enqueue password reset email job', {
+        userId: user._id,
+        error: (err as Error).message,
+      });
+    }
 
     // In production: send an email with `${env.clientUrl}/reset-password?token=${resetToken}`
     // For now, log in development so it can be tested without SMTP.
