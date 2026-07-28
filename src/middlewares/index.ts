@@ -6,7 +6,13 @@ export {
   morganMiddleware,
   rateLimiter,
 } from './security.middleware';
+export {
+  authLimiter,
+  loginLimiter,
+  passwordResetLimiter,
+} from './authRateLimit.middleware';
 export { requestId, requestLogger } from './base.middleware';
 export { validate } from './validate.middleware';
 export { authenticate, authorize } from './auth.middleware';
+
 

@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
-import { validate, authenticate } from '../middlewares';
+import {
+  validate,
+  authenticate,
+  authLimiter,
+  loginLimiter,
+  passwordResetLimiter,
+} from '../middlewares';
 import {
   registerSchema,
   verifyEmailSchema,
@@ -239,7 +245,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/register', validate(registerSchema), authController.register);
+router.post('/register', authLimiter, validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -278,7 +284,7 @@ router.post('/register', validate(registerSchema), authController.register);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
+router.post('/verify-email', authLimiter, validate(verifyEmailSchema), authController.verifyEmail);
 
 /**
  * @swagger
@@ -331,7 +337,7 @@ router.post('/verify-email', validate(verifyEmailSchema), authController.verifyE
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', validate(loginSchema), authController.login);
+router.post('/login', loginLimiter, validate(loginSchema), authController.login);
 
 /**
  * @swagger
@@ -385,7 +391,7 @@ router.post('/login', validate(loginSchema), authController.login);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/refresh-token', validate(refreshTokenSchema), authController.refreshToken);
+router.post('/refresh-token', authLimiter, validate(refreshTokenSchema), authController.refreshToken);
 
 /**
  * @swagger
@@ -424,7 +430,7 @@ router.post('/refresh-token', validate(refreshTokenSchema), authController.refre
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
+router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
@@ -463,7 +469,7 @@ router.post('/forgot-password', validate(forgotPasswordSchema), authController.f
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
+router.post('/reset-password', passwordResetLimiter, validate(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger

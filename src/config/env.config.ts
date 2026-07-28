@@ -34,6 +34,10 @@ const env = {
   // Rate Limiting
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
   rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+  authRateLimitWindowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000', 10),
+  authRateLimitMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '10', 10),
+  loginRateLimitMax: parseInt(process.env.LOGIN_RATE_LIMIT_MAX || '5', 10),
+  passwordResetRateLimitMax: parseInt(process.env.PASSWORD_RESET_RATE_LIMIT_MAX || '3', 10),
 
   // CORS
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',

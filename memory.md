@@ -581,10 +581,22 @@ Endpoints documented:
 - `PATCH /api/v1/reservations/{id}/pickup` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
 - `PATCH /api/v1/reservations/{id}/complete` (200 OK / 400 / 401 / 403 / 404, Bearer auth)
 
+### Phase 5 — Security & Infrastructure: Auth-specific rate limiting (completed)
+
+**src/middlewares/**
+- `authRateLimit.middleware.ts` — created `authLimiter` (10 req / 15 min), `loginLimiter` (5 req / 15 min), and `passwordResetLimiter` (3 req / 1 hour) using `express-rate-limit`
+- `index.ts` — re-exported rate limiters
+
+**src/routes/**
+- `auth.routes.ts` — attached `authLimiter` to `/register`, `/verify-email`, `/refresh-token`; `loginLimiter` to `/login`; `passwordResetLimiter` to `/forgot-password`, `/reset-password`
+
+**src/config/ & root**
+- `env.config.ts` — added `authRateLimitWindowMs`, `authRateLimitMax`, `loginRateLimitMax`, `passwordResetRateLimitMax`
+- `.env.example` — added auth rate limit environment variable defaults
+
 
 ## What has NOT been built yet
 
-- Auth rate limiting (stricter limiter on auth routes)
 - BullMQ job queues
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
@@ -650,6 +662,7 @@ Endpoints documented:
 - **Clean separation of Donor actions vs Claimer actions** — `accept`, `reject`, `pickup`, `complete` handled by food donor owner; `cancel` handled by claimer owner
 - **Strict route ordering in reservation router** — static `/my` and `/my/statistics` mounted before `/:id` to prevent route matching collisions
 - **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
+- **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
 
 ## Commit history
 
@@ -678,4 +691,5 @@ feat(reservation): add reservation service
 feat(reservation): add reservation controller
 feat(reservation): add reservation routes
 docs(reservation): add swagger documentation
+feat(auth): add route-specific rate limiting
 ```
