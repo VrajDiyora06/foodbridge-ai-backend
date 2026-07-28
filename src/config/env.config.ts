@@ -45,6 +45,14 @@ const env = {
   // Logging
   logLevel: process.env.LOG_LEVEL || 'debug',
 
+  // SMTP Email
+  smtpHost: process.env.SMTP_HOST || 'localhost',
+  smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPassword: process.env.SMTP_PASSWORD || '',
+  smtpFromName: process.env.SMTP_FROM_NAME || 'FoodBridge AI',
+  smtpFromEmail: process.env.SMTP_FROM_EMAIL || 'no-reply@foodbridge.ai',
+
   // Derived helpers
   get isDevelopment() {
     return this.nodeEnv === 'development';

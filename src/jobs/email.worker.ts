@@ -1,6 +1,7 @@
 import { Worker, Job } from 'bullmq';
 import { getRedisClient } from '../database';
 import { EMAIL_QUEUE } from './queueNames';
+import { emailService } from '../services/email.service';
 import logger from '../utils/logger';
 
 export interface EmailJobData {
@@ -15,12 +16,12 @@ export let emailWorker: Worker<EmailJobData> | null = null;
 
 /**
  * Job processor function for email queue.
- * Validates payload and logs email details without third-party email providers.
+ * Validates payload, renders template, and dispatches email via EmailService SMTP transporter.
  */
 export const processEmailJob = async (job: Job<EmailJobData>): Promise<void> => {
   const { type, to, subject, template, data } = job.data;
 
-  // Validate payload
+  // Validate payload — log warning and exit cleanly without rethrowing for invalid payload
   if (!to || !subject || !template) {
     logger.warn(
       `[EmailWorker] Job ${job.id} contains invalid payload — missing required fields (to, subject, template)`,
@@ -30,26 +31,32 @@ export const processEmailJob = async (job: Job<EmailJobData>): Promise<void> => 
   }
 
   try {
-    logger.info(`[EmailWorker] Processing simulated email dispatch`, {
-      jobId: job.id,
-      type: type || 'general',
-      recipient: to,
+    // Render email HTML & text templates
+    const { html, text } = emailService.renderTemplate(template, data || {});
+
+    // Dispatch email via Nodemailer SMTP
+    await emailService.sendEmail({
+      to,
       subject,
-      template,
-      dataKeys: data ? Object.keys(data) : [],
-      status: 'completed',
+      html,
+      text,
     });
 
-    logger.info(
-      `[EmailWorker] Email dispatch logged successfully for ${to} [Template: ${template}]`,
-    );
+    logger.info(`[EmailWorker] Email job ${job.id} dispatched successfully to ${to} [Template: ${template}]`, {
+      jobId: job.id,
+      type: type || 'general',
+      to,
+      subject,
+      template,
+      status: 'completed',
+    });
   } catch (error) {
     const err = error as Error;
     logger.error(
-      `[EmailWorker] Error processing email job ${job.id} for recipient ${to}: ${err.message}`,
+      `[EmailWorker] SMTP delivery error processing job ${job.id} for recipient ${to}: ${err.message}`,
       { error: err.message, stack: err.stack },
     );
-    // Rethrow to allow BullMQ retry mechanism to execute
+    // Rethrow SMTP error so BullMQ handles automated retries
     throw error;
   }
 };

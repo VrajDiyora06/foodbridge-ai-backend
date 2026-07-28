@@ -635,14 +635,17 @@ Endpoints documented:
 - Startup: calls `initEmailWorker()`
 - Graceful shutdown: calls `await closeEmailWorker()`
 
-### Phase 5 — Security & Infrastructure: Service-layer queue integration (completed)
+### Phase 5 — Security & Infrastructure: SMTP Email Delivery (completed)
 
 **src/services/**
-- `auth.service.ts` — enqueues verification email (`addEmailJob`) in `register()` and password reset email (`addEmailJob`) in `forgotPassword()`
-- `food.service.ts` — enqueues delayed food expiry job (`addFoodExpiryJob`) in `createFood()` and reschedules expiry job in `updateFood()` when `expiresAt` is updated
-- `reservation.service.ts` — enqueues delayed reservation expiry job (`addReservationExpiryJob`) in `createReservation()`
+- `email.service.ts` — Nodemailer SMTP transporter singleton `EmailService` configured via environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL`). Provides HTML/text email template renderer supporting `verify-email` and `password-reset` templates.
+- `index.ts` — re-exported `EmailService`, `emailService`, `SendEmailOptions`, `RenderedTemplate`
 
-All enqueue calls are wrapped in non-blocking `try/catch` blocks so background queue errors never crash or fail primary HTTP business API operations.
+**src/jobs/**
+- `email.worker.ts` — connected worker job processor function (`processEmailJob`) to `emailService.renderTemplate` and `emailService.sendEmail`. Validates payloads (no retries on malformed payloads) and rethrows SMTP delivery errors so BullMQ handles automated retries
+
+**Config**
+- `env.config.ts` & `.env.example` — added `smtpHost`, `smtpPort`, `smtpUser`, `smtpPassword`, `smtpFromName`, `smtpFromEmail`
 
 
 ## What has NOT been built yet
@@ -650,7 +653,6 @@ All enqueue calls are wrapped in non-blocking `try/catch` blocks so background q
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
-- Email sending integration (SMTP/SendGrid)
 
 ## Key decisions
 
@@ -717,6 +719,7 @@ All enqueue calls are wrapped in non-blocking `try/catch` blocks so background q
 - **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
 - **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
 - **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
+- **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
 
 ## Commit history
 
@@ -751,4 +754,5 @@ feat(queue): add food expiry worker
 feat(queue): add reservation expiry worker
 feat(queue): add email worker
 feat(queue): integrate background job scheduling
+feat(email): integrate SMTP email delivery
 ```
