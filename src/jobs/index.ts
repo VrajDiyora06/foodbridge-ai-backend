@@ -16,3 +16,11 @@ export {
   addReservationExpiryJob,
   addEmailJob,
 } from './queue';
+
+export {
+  foodExpiryWorker,
+  initFoodExpiryWorker,
+  closeFoodExpiryWorker,
+  processFoodExpiryJob,
+  FoodExpiryJobData,
+} from './foodExpiry.worker';

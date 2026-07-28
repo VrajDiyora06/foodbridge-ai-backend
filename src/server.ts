@@ -1,7 +1,7 @@
 import app from './app';
 import { env } from './config';
 import { connectMongo, disconnectMongo, connectRedis, disconnectRedis } from './database';
-import { initQueues, closeQueues } from './jobs';
+import { initQueues, closeQueues, initFoodExpiryWorker, closeFoodExpiryWorker } from './jobs';
 import logger from './utils/logger';
 
 const startServer = async () => {
@@ -9,6 +9,7 @@ const startServer = async () => {
   await connectMongo();
   await connectRedis();
   initQueues();
+  initFoodExpiryWorker();
 
   // ── Start HTTP server ──────────────────────────────────
   const server = app.listen(env.port, () => {
@@ -23,6 +24,7 @@ const startServer = async () => {
     server.close(async () => {
       logger.info('HTTP server closed');
 
+      await closeFoodExpiryWorker();
       await closeQueues();
       await disconnectMongo();
       await disconnectRedis();

@@ -605,10 +605,20 @@ Endpoints documented:
 - Startup: calls `initQueues()` after Redis is connected
 - Graceful shutdown: calls `await closeQueues()` before disconnecting Redis and MongoDB
 
+### Phase 5 — Security & Infrastructure: Food Expiry Worker (completed)
+
+**src/jobs/**
+- `foodExpiry.worker.ts` — BullMQ worker consuming `FOOD_EXPIRY_QUEUE`. Loads food listing via `FoodRepository`, handles missing/terminal states safely (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates active expired items to `FoodStatus.EXPIRED`, logs events with Winston, rethrows errors for BullMQ retries
+- `index.ts` — re-exported `foodExpiryWorker`, `initFoodExpiryWorker`, `closeFoodExpiryWorker`, `processFoodExpiryJob`, `FoodExpiryJobData`
+
+**src/server.ts**
+- Startup: calls `initFoodExpiryWorker()`
+- Graceful shutdown: calls `await closeFoodExpiryWorker()`
+
 
 ## What has NOT been built yet
 
-- Queue job processors / workers
+- Reservation expiry worker & Email queue worker
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
@@ -675,6 +685,7 @@ Endpoints documented:
 - **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 - **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
 - **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
+- **Idempotent Food Expiry Worker** — skips missing or already-terminal listings (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates expired items via `FoodRepository.updateStatus`, configured with 3 retries & exponential backoff
 
 ## Commit history
 
@@ -705,4 +716,5 @@ feat(reservation): add reservation routes
 docs(reservation): add swagger documentation
 feat(auth): add route-specific rate limiting
 feat(queue): add BullMQ infrastructure
+feat(queue): add food expiry worker
 ```

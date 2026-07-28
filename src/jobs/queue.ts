@@ -45,7 +45,18 @@ export const initQueues = (): void => {
   const connection = getRedisClient();
 
   // Create Queue instances
-  foodExpiryQueue = new Queue(FOOD_EXPIRY_QUEUE, { connection });
+  foodExpiryQueue = new Queue(FOOD_EXPIRY_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  });
   reservationExpiryQueue = new Queue(RESERVATION_EXPIRY_QUEUE, { connection });
   emailQueue = new Queue(EMAIL_QUEUE, { connection });
 
