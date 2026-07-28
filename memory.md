@@ -615,10 +615,20 @@ Endpoints documented:
 - Startup: calls `initFoodExpiryWorker()`
 - Graceful shutdown: calls `await closeFoodExpiryWorker()`
 
+### Phase 5 — Security & Infrastructure: Reservation Expiry Worker (completed)
+
+**src/jobs/**
+- `reservationExpiry.worker.ts` — BullMQ worker consuming `RESERVATION_EXPIRY_QUEUE`. Loads reservation via `reservationRepository`, handles missing or terminal states (`REJECTED`, `CANCELLED`, `COMPLETED`, `EXPIRED`), updates `PENDING` expired reservations to `ReservationStatus.EXPIRED`, and reverts linked food status to `FoodStatus.AVAILABLE` if currently `RESERVED`
+- `index.ts` — re-exported `reservationExpiryWorker`, `initReservationExpiryWorker`, `closeReservationExpiryWorker`, `processReservationExpiryJob`, `ReservationExpiryJobData`
+
+**src/server.ts**
+- Startup: calls `initReservationExpiryWorker()`
+- Graceful shutdown: calls `await closeReservationExpiryWorker()`
+
 
 ## What has NOT been built yet
 
-- Reservation expiry worker & Email queue worker
+- Email queue worker
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
@@ -686,6 +696,7 @@ Endpoints documented:
 - **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
 - **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
 - **Idempotent Food Expiry Worker** — skips missing or already-terminal listings (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates expired items via `FoodRepository.updateStatus`, configured with 3 retries & exponential backoff
+- **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
 
 ## Commit history
 
@@ -717,4 +728,5 @@ docs(reservation): add swagger documentation
 feat(auth): add route-specific rate limiting
 feat(queue): add BullMQ infrastructure
 feat(queue): add food expiry worker
+feat(queue): add reservation expiry worker
 ```

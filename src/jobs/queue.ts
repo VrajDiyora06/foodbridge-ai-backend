@@ -57,7 +57,18 @@ export const initQueues = (): void => {
       removeOnFail: false,
     },
   });
-  reservationExpiryQueue = new Queue(RESERVATION_EXPIRY_QUEUE, { connection });
+  reservationExpiryQueue = new Queue(RESERVATION_EXPIRY_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  });
   emailQueue = new Queue(EMAIL_QUEUE, { connection });
 
   // Create QueueEvents instances and attach listeners

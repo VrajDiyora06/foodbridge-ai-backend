@@ -24,3 +24,11 @@ export {
   processFoodExpiryJob,
   FoodExpiryJobData,
 } from './foodExpiry.worker';
+
+export {
+  reservationExpiryWorker,
+  initReservationExpiryWorker,
+  closeReservationExpiryWorker,
+  processReservationExpiryJob,
+  ReservationExpiryJobData,
+} from './reservationExpiry.worker';
