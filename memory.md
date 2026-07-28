@@ -594,10 +594,21 @@ Endpoints documented:
 - `env.config.ts` — added `authRateLimitWindowMs`, `authRateLimitMax`, `loginRateLimitMax`, `passwordResetRateLimitMax`
 - `.env.example` — added auth rate limit environment variable defaults
 
+### Phase 5 — Security & Infrastructure: BullMQ Queue Infrastructure (completed)
+
+**src/jobs/**
+- `queueNames.ts` — constants for `FOOD_EXPIRY_QUEUE` (`'food-expiry-queue'`), `RESERVATION_EXPIRY_QUEUE` (`'reservation-expiry-queue'`), and `EMAIL_QUEUE` (`'email-queue'`)
+- `queue.ts` — BullMQ `Queue` & `QueueEvents` singletons, Winston event listeners (`completed`, `failed`, `stalled`), helper enqueue functions (`addFoodExpiryJob`, `addReservationExpiryJob`, `addEmailJob`), and lifecycle functions (`initQueues`, `closeQueues`)
+- `index.ts` — barrel exports for queue names, queue singletons, helpers, and lifecycle functions
+
+**src/server.ts**
+- Startup: calls `initQueues()` after Redis is connected
+- Graceful shutdown: calls `await closeQueues()` before disconnecting Redis and MongoDB
+
 
 ## What has NOT been built yet
 
-- BullMQ job queues
+- Queue job processors / workers
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
@@ -663,6 +674,7 @@ Endpoints documented:
 - **Strict route ordering in reservation router** — static `/my` and `/my/statistics` mounted before `/:id` to prevent route matching collisions
 - **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
 - **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
+- **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
 
 ## Commit history
 
@@ -692,4 +704,5 @@ feat(reservation): add reservation controller
 feat(reservation): add reservation routes
 docs(reservation): add swagger documentation
 feat(auth): add route-specific rate limiting
+feat(queue): add BullMQ infrastructure
 ```

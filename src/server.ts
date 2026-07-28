@@ -1,12 +1,14 @@
 import app from './app';
 import { env } from './config';
 import { connectMongo, disconnectMongo, connectRedis, disconnectRedis } from './database';
+import { initQueues, closeQueues } from './jobs';
 import logger from './utils/logger';
 
 const startServer = async () => {
   // ── Connect external services ──────────────────────────
   await connectMongo();
   await connectRedis();
+  initQueues();
 
   // ── Start HTTP server ──────────────────────────────────
   const server = app.listen(env.port, () => {
@@ -21,6 +23,7 @@ const startServer = async () => {
     server.close(async () => {
       logger.info('HTTP server closed');
 
+      await closeQueues();
       await disconnectMongo();
       await disconnectRedis();
 
