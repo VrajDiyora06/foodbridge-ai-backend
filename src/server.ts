@@ -8,6 +8,8 @@ import {
   closeFoodExpiryWorker,
   initReservationExpiryWorker,
   closeReservationExpiryWorker,
+  initEmailWorker,
+  closeEmailWorker,
 } from './jobs';
 import logger from './utils/logger';
 
@@ -18,6 +20,7 @@ const startServer = async () => {
   initQueues();
   initFoodExpiryWorker();
   initReservationExpiryWorker();
+  initEmailWorker();
 
   // ── Start HTTP server ──────────────────────────────────
   const server = app.listen(env.port, () => {
@@ -32,6 +35,7 @@ const startServer = async () => {
     server.close(async () => {
       logger.info('HTTP server closed');
 
+      await closeEmailWorker();
       await closeReservationExpiryWorker();
       await closeFoodExpiryWorker();
       await closeQueues();

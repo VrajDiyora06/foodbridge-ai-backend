@@ -32,3 +32,11 @@ export {
   processReservationExpiryJob,
   ReservationExpiryJobData,
 } from './reservationExpiry.worker';
+
+export {
+  emailWorker,
+  initEmailWorker,
+  closeEmailWorker,
+  processEmailJob,
+  EmailJobData,
+} from './email.worker';

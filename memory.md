@@ -625,14 +625,23 @@ Endpoints documented:
 - Startup: calls `initReservationExpiryWorker()`
 - Graceful shutdown: calls `await closeReservationExpiryWorker()`
 
+### Phase 5 — Security & Infrastructure: Email Worker (completed)
+
+**src/jobs/**
+- `email.worker.ts` — BullMQ worker consuming `EMAIL_QUEUE`. Validates payload fields (`to`, `subject`, `template`), logs simulated email dispatch metadata (`jobId`, `recipient`, `subject`, `template`, `status`) via Winston without third-party email SDKs (Nodemailer/SendGrid), configured with 5 retries and exponential backoff
+- `index.ts` — re-exported `emailWorker`, `initEmailWorker`, `closeEmailWorker`, `processEmailJob`, `EmailJobData`
+
+**src/server.ts**
+- Startup: calls `initEmailWorker()`
+- Graceful shutdown: calls `await closeEmailWorker()`
+
 
 ## What has NOT been built yet
 
-- Email queue worker
 - Socket.IO real-time events
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
-- Email sending (SMTP/SendGrid)
+- Email sending integration (SMTP/SendGrid)
 
 ## Key decisions
 
@@ -697,6 +706,7 @@ Endpoints documented:
 - **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
 - **Idempotent Food Expiry Worker** — skips missing or already-terminal listings (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates expired items via `FoodRepository.updateStatus`, configured with 3 retries & exponential backoff
 - **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
+- **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
 
 ## Commit history
 
@@ -729,4 +739,5 @@ feat(auth): add route-specific rate limiting
 feat(queue): add BullMQ infrastructure
 feat(queue): add food expiry worker
 feat(queue): add reservation expiry worker
+feat(queue): add email worker
 ```

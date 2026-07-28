@@ -69,7 +69,18 @@ export const initQueues = (): void => {
       removeOnFail: false,
     },
   });
-  emailQueue = new Queue(EMAIL_QUEUE, { connection });
+  emailQueue = new Queue(EMAIL_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 5,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  });
 
   // Create QueueEvents instances and attach listeners
   const foodExpiryEvents = new QueueEvents(FOOD_EXPIRY_QUEUE, { connection });
