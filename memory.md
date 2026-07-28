@@ -660,10 +660,20 @@ Endpoints documented:
 **SocketManager**
 - `socketManager.ts` — added safe `emit(eventName, payload)` and `broadcast(eventName, payload)` helper methods with try/catch and Winston logging
 
+### Phase 5 — Security & Infrastructure: Socket.IO JWT Authentication (completed)
+
+**src/socket/middlewares/**
+- `socketAuth.middleware.ts` — Socket.IO authentication middleware (`socketAuthMiddleware`) validating JWT access tokens from `socket.handshake.auth.token` or `Authorization` header. Reuses `TokenService` (verification & Redis blacklist check) and `UserRepository` (user existence & `AccountStatus.ACTIVE` check). Attaches `socket.data.user = { id, role, email, isVerified }`.
+
+**src/socket/**
+- `socketManager.ts` — registered `this.io.use(socketAuthMiddleware)` in `initialize()`
+- `events/connection.event.ts` — automatically joins authenticated sockets to rooms `user:${user.id}` and `role:${user.role}`, logging connection details with Winston
+- `events/disconnect.event.ts` — updated disconnect logging to include `userId`
+- `socket.ts` — re-exported `socketAuthMiddleware` and `SocketUserContext`
+
 
 ## What has NOT been built yet
 
-- Socket JWT Authentication Middleware
 - GitHub Actions CI/CD pipeline
 - Integration/e2e tests
 
@@ -733,8 +743,17 @@ Endpoints documented:
 - **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
 - **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
 - **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
+- **Co-located Swagger annotations on reservation routes** — keeping OpenAPI docs right above route handlers ensures docs stay synchronized with endpoints
+- **Tiered route-specific rate limiters for auth** — 5 req/15min for `/login` (brute-force defense), 3 req/hour for password reset (abuse defense), 10 req/15min for general auth (`/register`, `/verify-email`, `/refresh-token`)
+- **BullMQ Singleton & Lifecycle Pattern** — shared `ioredis` connection instance with `maxRetriesPerRequest: null`, `QueueEvents` listeners logging via Winston, graceful async `closeQueues()` on SIGINT/SIGTERM
+- **Idempotent Food Expiry Worker** — skips missing or already-terminal listings (`EXPIRED`, `DELIVERED`, `CANCELLED`), updates expired items via `FoodRepository.updateStatus`, configured with 3 retries & exponential backoff
+- **Reservation Expiry & Food Sync Worker** — marks expired `PENDING` claims as `EXPIRED` via `reservationRepository` and reverts linked food status back to `AVAILABLE` via `foodRepository` if currently `RESERVED`
+- **Zero-Dependency Email Worker** — validates payload, logs dispatch details cleanly via Winston logger, configured with 5 retries and exponential backoff for future SMTP pluggability
+- **Non-blocking Service Queue Integration** — background job enqueue calls (`addEmailJob`, `addFoodExpiryJob`, `addReservationExpiryJob`) wrapped in `try/catch` with Winston logging, ensuring core DB transactions succeed even if Redis queue fails
+- **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
 - **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
 - **Non-blocking Real-Time Business Event Emitters** — decoupled socket event functions for food (`food:created`, `food:updated`, `food:deleted`, `food:expired`) and reservations (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`), wrapped in try/catch to ensure API reliability
+- **Strict Socket.IO JWT Handshake Authentication** — validates JWT signature, Redis blacklist revocation, MongoDB user record, and `AccountStatus.ACTIVE`, populating `socket.data.user` and auto-joining `user:${userId}` and `role:${role}` rooms
 
 ## Commit history
 
@@ -772,4 +791,5 @@ feat(queue): integrate background job scheduling
 feat(email): integrate SMTP email delivery
 feat(socket): add Socket.IO infrastructure
 feat(socket): add real-time business events
+feat(socket): add JWT socket authentication
 ```

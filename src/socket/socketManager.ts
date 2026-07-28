@@ -3,6 +3,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import env from '../config/env.config';
 import logger from '../utils/logger';
 import { handleConnection } from './events/connection.event';
+import { socketAuthMiddleware } from './middlewares/socketAuth.middleware';
 
 export class SocketManager {
   private io: SocketIOServer | null = null;
@@ -26,13 +27,8 @@ export class SocketManager {
       pingInterval: 25000,
     });
 
-    // ── Placeholder for Socket.IO authentication middleware ────
-    // Future JWT authentication middleware will be mounted here:
-    // this.io.use((socket, next) => {
-    //   // Verify JWT access token attached to socket handshake
-    //   next();
-    // });
-    // ──────────────────────────────────────────────────────────
+    // Register JWT authentication middleware
+    this.io.use(socketAuthMiddleware);
 
     // Register root connection listener
     this.io.on('connection', (socket) => {
