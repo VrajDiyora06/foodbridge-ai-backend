@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
       target: production
     container_name: foodbridge-api
@@ -9,7 +9,7 @@ services:
     ports:
       - "${PORT:-5000}:5000"
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
       mongo:
         condition: service_healthy

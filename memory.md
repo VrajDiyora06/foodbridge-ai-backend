@@ -676,11 +676,22 @@ Endpoints documented:
 **.github/workflows/**
 - `ci.yml` — automated CI workflow triggering on `push` and `pull_request` to `main` and `develop` branches. Built with Node.js 22 LTS, npm dependency caching, `npm ci`, `npm run lint` (ESLint), `npm run build` (TypeScript compiler), `npm run test:coverage` (Jest), and automated coverage report artifact upload (`actions/upload-artifact@v4`). Includes structured extension points for future Docker image build/push and container deployment stages.
 
+### Phase 8 — Project Architecture: Full-Stack Directory Restructuring (completed)
+
+**Root Directory (`FoodBridge-AI/`)**
+- `backend/` — moved all existing production Express/MongoDB/Redis/BullMQ backend source code, configuration, `package.json`, `tsconfig.json`, `Dockerfile`, `tests/`, and `.env` into dedicated `./backend` folder
+- `frontend/` — contains React 19 + TypeScript + Vite 8 frontend codebase (`src/`, `package.json`, `tsconfig.json`, `vite.config.ts`)
+- `docs/` — `FRONTEND_STRUCTURE.md` architectural documentation
+- `docker-compose.yml` — updated service build context to `./backend` and env file to `./backend/.env`
+- `.github/workflows/ci.yml` — updated CI workflow to independently test & build `./backend` and `./frontend` packages
+
 
 ## What has NOT been built yet
 
-- Integration/e2e test suite (API supertest)
-- Production Docker container registry push & CD deployment workflow
+- Frontend Auth Context & Axios API Integration
+- Frontend Forms & Validation (React Hook Form)
+- Frontend Socket.IO Notifications Client
+- Integration/e2e tests
 
 ## Key decisions
 
@@ -757,8 +768,8 @@ Endpoints documented:
 - **Nodemailer SMTP Transporter & HTML Templates** — environment-driven SMTP transport with extensible template rendering for `verify-email` and `password-reset` emails
 - **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
 - **Non-blocking Real-Time Business Event Emitters** — decoupled socket event functions for food (`food:created`, `food:updated`, `food:deleted`, `food:expired`) and reservations (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`), wrapped in try/catch to ensure API reliability
-- **Strict Socket.IO JWT Handshake Authentication** — validates JWT signature, Redis blacklist revocation, MongoDB user record, and `AccountStatus.ACTIVE`, populating `socket.data.user` and auto-joining `user:${userId}` and `role:${role}` rooms
-- **Modular GitHub Actions CI Pipeline** — Node.js 22 LTS environment, npm dependency caching, strict fail-fast execution (lint, build, test), coverage artifact uploading, and commented extension blocks for Docker build/push and CD deployment
+- **Clean Full-Stack Repository Structure** — root directory organized strictly into `backend/`, `frontend/`, `docs/`, `docker-compose.yml`, `.gitignore`, and `README.md`
+- **Vite 8 + React 19 + Tailwind CSS v4 Frontend Architecture** — clean modular structure, path alias `@`, role-based layout routing (PublicLayout & DashboardLayout), responsive Navbar with mobile drawer, collapsible Sidebar with role portal switching, 4-column Footer, atomic UI primitives (`Button`, `Card`, `Badge`, `Input`, `LoadingSpinner`), domain common components (`PageHeader`, `StatusBadge`, `EmptyState`), and clean barrel exports (`index.ts`) across all subdirectories
 
 ## Commit history
 
@@ -798,4 +809,7 @@ feat(socket): add Socket.IO infrastructure
 feat(socket): add real-time business events
 feat(socket): add JWT socket authentication
 ci: add GitHub Actions continuous integration
+feat(frontend): initialize React 19 + Vite + Tailwind CSS v4 foundation, layouts, navigation, and routing
+refactor(frontend): reorganize atomic components, add path aliases (@), barrel exports, and docs
+refactor(project): restructure project root into backend/, frontend/, and docs/
 ```
