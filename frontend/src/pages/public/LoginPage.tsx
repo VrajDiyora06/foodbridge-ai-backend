@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Utensils, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ForgotPasswordModal } from '../../components/modals/ForgotPasswordModal';
 import type { LoginCredentials } from '../../types/auth';
@@ -58,9 +58,7 @@ export const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 mb-4 shadow-sm">
-            <Utensils className="w-7 h-7" />
-          </div>
+          <img src="/logo.png" alt="FoodBridge AI Logo" className="h-16 w-auto mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
           <p className="text-sm text-slate-500 mt-1.5">Sign in to manage food donations and reservations</p>
         </div>

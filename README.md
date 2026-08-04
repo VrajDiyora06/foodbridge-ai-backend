@@ -1,7 +1,6 @@
 <div align="center">
 
-  <!-- Project Logo Placeholder -->
-  <img src="https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/logo.png" alt="FoodBridge AI Logo" width="120" height="120" />
+  <img src="docs/assets/logo.png" alt="FoodBridge AI Logo" width="220" />
 
   # FoodBridge AI
 
@@ -14,7 +13,7 @@
   [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
   [![Jest Unit Tests](https://img.shields.io/badge/Unit%20Tests-148%20Passed-success.svg)]()
   [![Jest Integration Tests](https://img.shields.io/badge/Integration%20Tests-48%20Passed-success.svg)]()
-  [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-38%20Passed-success.svg)]()
+  [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-51%20Passed-success.svg)]()
   [![Code Coverage](https://img.shields.io/badge/Coverage-94.2%25-brightgreen.svg)]()
 
 </div>
@@ -27,7 +26,9 @@
   - [Problem Statement](#problem-statement)
   - [The FoodBridge AI Solution](#the-foodbridge-ai-solution)
   - [Core Objectives](#core-objectives)
+- [📊 Project Statistics](#-project-statistics)
 - [✨ Key Features](#-key-features)
+- [🖼️ Application Screenshots](#️-application-screenshots)
 - [🛠️ Technology Stack](#️-technology-stack)
 - [🏗️ System Architecture](#️-system-architecture)
 - [📂 Folder Structure](#-folder-structure)
@@ -47,11 +48,9 @@
   - [1. Food Donation Workflow](#1-food-donation-workflow)
   - [2. Claim & Reservation Workflow](#2-claim--reservation-workflow)
   - [3. Notification Dispatch Workflow](#3-notification-dispatch-workflow)
-- [🖼️ Application Screenshots](#️-application-screenshots)
 - [🧪 Testing Architecture](#-testing-architecture)
-- [🛡️ Security Protocols](#️-security-protocols)
+- [🛡️ Security Protocols](#-security-protocols)
 - [⚡ Performance Optimizations](#-performance-optimizations)
-- [🚀 Future Roadmap](#-future-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [👤 Author & Acknowledgments](#-author--acknowledgments)
@@ -64,15 +63,30 @@
 Globally, over **1.3 billion tons of edible food is wasted annually**, while millions suffer from food insecurity. Restaurants, supermarkets, event venues, and households frequently discard surplus food due to a lack of immediate, localized distribution channels. Traditional donation channels suffer from **logistical latency**, **poor visibility**, and manual claim overhead, causing perishable food to spoil before reaching those in need.
 
 ### The FoodBridge AI Solution
-**FoodBridge AI** is an enterprise-grade, full-stack food surplus donation and retrieval platform. It bridges the gap between surplus food generators (donors) and community organizations (NGOs, shelters, receivers, and volunteers) in real time.
+**FoodBridge AI** is a full-stack food surplus donation and retrieval platform that bridges the gap between surplus food generators (donors) and community organizations (NGOs, shelters, receivers, and volunteers) in real time.
 
 By integrating **interactive geospatial mapping (React Leaflet)**, **event-driven web sockets (Socket.IO)**, **asynchronous background queues (BullMQ + Redis)**, and **role-aware portals**, FoodBridge AI enables donors to list surplus meals within seconds and receivers to locate and claim nearby food before expiration.
 
 ### Core Objectives
 1. **Zero Spoilage Logistics**: Automate real-time notification broadcasts and expiry countdown timers for surplus food.
-2. **Geospatial Precision**: Map food donation listings with dynamic distance filtering and custom leaflet map markers.
+2. **Geospatial Precision**: Map food donation listings with dynamic distance filtering and custom map markers.
 3. **Role Enforcement**: Provide tailored dashboards for Donors, Receivers/NGOs, Volunteers, and System Administrators.
 4. **Resilient Architecture**: Maintain zero downtime through Redis-backed rate limiting, BullMQ background workers, and persistent JWT session rotation.
+
+---
+
+## 📊 Project Statistics
+
+| Metric | Total Count | Details |
+| :--- | :--- | :--- |
+| **Frontend UI Components** | **113 Components** | React 19 atomic components, pages, modals & feature views |
+| **Backend Code Modules** | **80 Modules** | Express controllers, services, repositories, schemas & workers |
+| **REST API Endpoints** | **45 Endpoints** | Auth, Users, Food, Reservations, Notifications, Admin |
+| **Real-Time Socket Events** | **11 Events** | Dynamic WebSocket lifecycle events & targeted room broadcasts |
+| **Database Schemas** | **4 Mongoose Models** | GeoJSON spatial indexing (`User`, `Food`, `Reservation`, `Notification`) |
+| **Background Queue Workers**| **4 BullMQ Workers** | Asynchronous email, food expiry, reservation expiry & broadcast workers |
+| **Test Suites** | **32 Suites** | 11 Jest Unit + 7 Jest Integration + 14 Playwright E2E Specs |
+| **Total Automated Tests** | **247 Executions** | **100% Pass Rate** (148 Unit + 48 Integration + 51 E2E Runs) |
 
 ---
 
@@ -84,13 +98,13 @@ By integrating **interactive geospatial mapping (React Leaflet)**, **event-drive
 - **Session Protection**: Automatic HTTP 401 interceptor refresh queue on the frontend to ensure uninterrupted user sessions.
 
 ### 🍱 Food Donation Management
-- **Listing Creation**: Donors can publish food offerings with title, description, quantity, dietary tags (veg, vegan, halal, gluten-free), pickup window, and expiry time.
+- **Listing Creation**: Donors publish food offerings with title, description, quantity, dietary tags (veg, vegan, halal, gluten-free), pickup window, and expiry time.
 - **Geospatial Tagging**: Automatic reverse-geocoding of pickup locations into GeoJSON coordinates (`latitude`, `longitude`).
 - **State Machine Rules**: Automated status transitions (`AVAILABLE` → `CLAIMED` → `PICKED_UP` → `COMPLETED` / `EXPIRED`).
 
 ### 🤝 Claim & Reservation Logistics
 - **Claim Workflow**: NGOs and volunteers reserve available food with a single click.
-- **Anti-Double-Claiming**: Redis distributed lock prevention ensuring a listing cannot be claimed simultaneously by multiple receivers.
+- **Anti-Double-Claiming**: Redis lock prevention ensuring a listing cannot be claimed simultaneously by multiple receivers.
 - **Lifecycle Moderation**: Donors accept, reject, mark picked up, or mark complete with instant notification updates to the claimer.
 
 ### 🔔 Real-Time Notification Engine
@@ -101,7 +115,7 @@ By integrating **interactive geospatial mapping (React Leaflet)**, **event-drive
 ### 🗺️ Interactive Maps & Proximity Search
 - **React Leaflet Map**: Dynamic interactive map displaying nearby active food donations.
 - **Current Geolocation**: Browser GPS integration with single-click "Locate Me" position centering.
-- **Custom Popup Cards**: Interactive popup modals showing food image, distance, quantity, and direct claim triggers.
+- **Custom Popup Cards**: Interactive popup modals showing food details, distance, quantity, and direct claim triggers.
 
 ### 👑 Admin Management Portal
 - **Dashboard Metrics**: Real-time aggregate statistics on total users, active listings, fulfilled claims, and total meals saved.
@@ -111,23 +125,79 @@ By integrating **interactive geospatial mapping (React Leaflet)**, **event-drive
 
 ---
 
+## 🖼️ Application Screenshots
+
+<div align="center">
+
+### 1. Home Page
+![Home Page](docs/assets/screenshots/home.png)
+
+### 2. Login Page
+![Login Page](docs/assets/screenshots/login.png)
+
+### 3. Register Page
+![Register Page](docs/assets/screenshots/register.png)
+
+### 4. Donor Dashboard
+![Donor Dashboard](docs/assets/screenshots/donor-dashboard.png)
+
+### 5. Create Food Donation
+![Create Donation](docs/assets/screenshots/create-donation.png)
+
+### 6. My Donations Management
+![My Donations](docs/assets/screenshots/my-donations.png)
+
+### 7. Browse Food Catalog
+![Browse Food](docs/assets/screenshots/browse-food.png)
+
+### 8. Available Food Details
+![Food Details](docs/assets/screenshots/food-details.png)
+
+### 9. Receiver Dashboard
+![Receiver Dashboard](docs/assets/screenshots/receiver-dashboard.png)
+
+### 10. My Reservations
+![My Reservations](docs/assets/screenshots/my-reservations.png)
+
+### 11. Notification Drawer (Real-Time Feed)
+![Notifications Drawer](docs/assets/screenshots/notifications.png)
+
+### 12. User Profile & Settings
+![User Profile](docs/assets/screenshots/profile.png)
+
+### 13. Interactive Geolocation Map
+![Interactive Map](docs/assets/screenshots/map.png)
+
+### 14. Admin Console Dashboard
+![Admin Dashboard](docs/assets/screenshots/admin-dashboard.png)
+
+### 15. Admin User Management & Controls
+![Admin User Management](docs/assets/screenshots/admin-users.png)
+
+### 16. Recharts System Analytics
+![Admin Analytics](docs/assets/screenshots/analytics.png)
+
+</div>
+
+---
+
 ## 🛠️ Technology Stack
 
 | Domain | Technology / Library | Version | Description |
 | :--- | :--- | :--- | :--- |
-| **Frontend Core** | React | `v19.2.7` | UI component architecture |
-| **Build Tool** | Vite | `v8.1.1` | Next-generation frontend tooling |
+| **Frontend Core** | React | `v19.2.7` | Component-driven UI architecture |
+| **Build Tool** | Vite | `v8.1.1` | Fast frontend build tooling |
 | **Language** | TypeScript | `v5.7.3` | Strict static typing across frontend & backend |
 | **Styling** | Tailwind CSS | `v4.3.3` | Utility-first responsive design |
 | **State & Data** | TanStack React Query | `v5.66.0` | Server state management and caching |
 | **Forms & Validation** | React Hook Form + Zod | `v7.83.0` / `v3.24.2` | Schema-driven form handling |
 | **Interactive Maps** | React Leaflet + Leaflet | `v5.0.0` / `v1.9.4` | Open-source map visualizer |
 | **Data Visualization**| Recharts | `v2.15.1` | Analytics charts and metrics rendering |
-| **Backend Runtime** | Node.js + Express | `v20.x` / `v4.21.2` | High-performance HTTP application framework |
-| **Database** | MongoDB + Mongoose | `v8.9.5` | Document store with 2dsphere spatial indexing |
-| **Caching & Queues** | Redis (ioredis) + BullMQ | `v5.6.0` / `v5.41.7` | Distributed caching, session storage & job queues |
+| **Backend Runtime** | Node.js + Express | `v20.x` / `v4.21.2` | Application server framework |
+| **Database** | MongoDB + Mongoose | `v8.9.5` | Document store with GeoJSON 2dsphere spatial indexing |
+| **Caching & Queues** | Redis (ioredis) + BullMQ | `v5.6.0` / `v5.41.7` | Caching, session storage & background job queues |
 | **Real-Time Engine** | Socket.IO | `v4.8.3` | Bi-directional WebSocket communication |
-| **Email Delivery** | Nodemailer | `v6.10.0` | SMTP transactional email notification service |
+| **Email Delivery** | Nodemailer | `v6.10.0` | Transactional SMTP email notification service |
 | **Documentation** | Swagger / OpenAPI | `v5.5.0` | Interactive API documentation (`/api-docs`) |
 | **Unit Testing** | Jest | `v29.7.0` | Backend unit test suite (148 tests) |
 | **Integration Testing**| Supertest + MongoMemoryServer| `v7.0.0` / `v10.1.3`| In-memory integration test suite (48 tests) |
@@ -220,7 +290,10 @@ FoodBridge-AI/
 │   ├── vite.config.ts
 │   └── package.json
 │
-├── docs/                       # Architectural documentation & diagrams
+├── docs/                       # Architectural documentation & assets
+│   └── assets/
+│       ├── logo.png            # Official FoodBridge AI logo
+│       └── screenshots/        # 16 High-Resolution Real Application Screenshots
 ├── docker-compose.yml          # Container orchestration manifest
 ├── memory.md                   # System design memory & historical development records
 └── README.md
@@ -233,7 +306,7 @@ FoodBridge-AI/
 ### Prerequisites
 - **Node.js**: `v20.x` or higher
 - **npm**: `v10.x` or higher
-- **MongoDB**: Local instance running on `mongodb://localhost:27017` or MongoDB Atlas URI
+- **MongoDB**: Local instance running on `mongodb://localhost:27017` or Atlas connection string
 - **Redis**: Running on `localhost:6379`
 
 ---
@@ -317,7 +390,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# JWT Secrets (Do NOT expose in production!)
+# JWT Secrets
 JWT_SECRET=your_super_secret_jwt_access_key_2026
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=your_super_secret_jwt_refresh_key_2026
@@ -492,34 +565,9 @@ VITE_SOCKET_URL=http://localhost:5000
 
 ---
 
-## 🖼️ Application Screenshots
-
-> *Replace placeholder paths below with actual application screenshots.*
-
-<div align="center">
-
-### 🌐 Public Portal & Interactive Map
-| Landing & Authentication Page | Interactive Geolocation Map |
-| :---: | :---: |
-| ![Landing Screen](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/landing.png) | ![Interactive Map](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/map.png) |
-
-### 📊 Role-Aware Dashboards
-| Donor Management Portal | Receiver Available Catalog |
-| :---: | :---: |
-| ![Donor Dashboard](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/donor-dashboard.png) | ![Receiver Catalog](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/receiver-dashboard.png) |
-
-### 👑 Admin Console & Analytics
-| Admin Moderation & User Control | Recharts Analytics & Metrics |
-| :---: | :---: |
-| ![Admin Users](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/admin-users.png) | ![Admin Analytics](https://raw.githubusercontent.com/VrajDiyora06/foodbridge-ai/main/docs/assets/screenshots/admin-analytics.png) |
-
-</div>
-
----
-
 ## 🧪 Testing Architecture
 
-FoodBridge AI maintains rigorous automated test coverage across three distinct testing tiers:
+FoodBridge AI maintains automated test coverage across three distinct testing tiers:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -557,9 +605,6 @@ cd frontend
 
 # Run Playwright E2E tests across Chromium and Firefox
 npx playwright test
-
-# Open interactive Playwright Test UI
-npx playwright test --ui
 ```
 
 ---
@@ -578,19 +623,10 @@ npx playwright test --ui
 
 ## ⚡ Performance Optimizations
 
-- **MongoDB 2dsphere Spatial Indexing**: Enables instant geospatial `$near` queries across thousands of active food listing coordinates.
+- **MongoDB 2dsphere Spatial Indexing**: Enables instant geospatial `$near` queries across active food listing coordinates.
 - **Redis Response Caching**: Frequently accessed metadata and user session tokens are cached in Redis to minimize database lookups.
 - **BullMQ Asynchronous Workers**: Heavy tasks (email generation, food expiration updates, notification fan-out) are processed asynchronously outside the HTTP request-response cycle.
 - **Paginated Response Pipeline**: All listing and user management endpoints return standard paginated metadata (`page`, `limit`, `totalPages`, `totalItems`).
-
----
-
-## 🚀 Future Roadmap
-
-- [ ] **AI-Powered Food Quality Assessment**: Computer vision models to estimate food freshness from uploaded images.
-- [ ] **OCR Expiry Date Extraction**: Automatic OCR text recognition on packaged food labels to auto-fill expiration timestamps.
-- [ ] **Native Mobile Application**: Cross-platform React Native app with push notifications and live GPS tracking for drivers.
-- [ ] **Machine Learning Route Optimization**: Dynamic route planning for volunteers collecting multiple surplus donations.
 
 ---
 

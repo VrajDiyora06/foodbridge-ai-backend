@@ -42,14 +42,66 @@ export const createStorageState = async (
     isVerified: true,
   };
 
-  // Mock /auth/me so AuthContext refetchUser succeeds
+  // Mock /auth/me & /users/me so AuthContext and useProfile succeed instantly
   await page.route('**/api/v1/auth/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: mockUser }),
+    });
+  });
+
+  await page.route('**/api/v1/users/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: mockUser }),
+    });
+  });
+
+  await page.route('**/api/v1/notifications**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         success: true,
-        data: mockUser,
+        data: [],
+        pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/food**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: [],
+        pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/reservations**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: [],
+        pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/admin**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: { users: { total: 10 }, food: { total: 20 }, reservations: { total: 15 } },
       }),
     });
   });

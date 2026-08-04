@@ -55,9 +55,7 @@ export const RegisterPage: React.FC = () => {
       <div className="max-w-lg w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 mb-4 shadow-sm">
-            <UserPlus className="w-7 h-7" />
-          </div>
+          <img src="/logo.png" alt="FoodBridge AI Logo" className="h-16 w-auto mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create an Account</h1>
           <p className="text-sm text-slate-500 mt-1.5">Join FoodBridge AI to reduce food waste and feed communities</p>
         </div>

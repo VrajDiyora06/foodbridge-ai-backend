@@ -16,12 +16,12 @@ test.describe('Protected Route Guard E2E', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('should allow donor access to /donor dashboard when authenticated as donor', async ({ page, donorPage }) => {
+  test('should allow donor access to /donor dashboard when authenticated as donor', async ({ page, donorSession }) => {
     await page.goto('/donor');
     await expect(page).toHaveURL(/\/donor/);
   });
 
-  test('should allow admin access to /admin portal when authenticated as admin', async ({ page, adminPage }) => {
+  test('should allow admin access to /admin portal when authenticated as admin', async ({ page, adminSession }) => {
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin/);
   });

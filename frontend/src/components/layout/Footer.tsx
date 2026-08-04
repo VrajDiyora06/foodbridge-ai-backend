@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Utensils, Heart, Mail, Phone, MapPin, Globe, Share2, ExternalLink } from 'lucide-react';
+import { Heart, Mail, Phone, MapPin, Globe, Share2, ExternalLink } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -10,9 +10,7 @@ export const Footer: React.FC = () => {
           {/* Column 1: Brand & Mission */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">
-                <Utensils className="w-5 h-5" />
-              </div>
+              <img src="/logo.png" alt="FoodBridge AI Logo" className="h-9 w-auto object-contain" />
               <span className="font-bold text-xl tracking-tight text-white flex items-center gap-1">
                 FoodBridge
                 <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">

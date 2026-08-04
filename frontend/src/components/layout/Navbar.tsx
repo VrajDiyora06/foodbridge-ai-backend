@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Utensils,
   Menu,
   X,
   HeartHandshake,
@@ -36,9 +35,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-200">
-              <Utensils className="w-5.5 h-5.5" />
-            </div>
+            <img src="/logo.png" alt="FoodBridge AI Logo" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-200" />
             <div className="flex flex-col">
               <span className="font-bold text-xl tracking-tight text-slate-900 flex items-center gap-1">
                 FoodBridge
