@@ -644,12 +644,6 @@ Please ensure all Jest unit/integration tests and Playwright E2E tests pass befo
 
 ---
 
-## 📄 License
-
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
-
----
-
 ## 👤 Author & Acknowledgments
 
 **FoodBridge AI** is designed and developed by **Vraj Diyora**.

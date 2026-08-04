@@ -1,0 +1,244 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: capture-screenshots.spec.ts >> Capture Real Application Screenshots (1920x1080) >> 1. home.png
+- Location: e2e\capture-screenshots.spec.ts:165:3
+
+# Error details
+
+```
+Error: page.goto: NS_ERROR_CONNECTION_REFUSED
+Call log:
+  - navigating to "http://127.0.0.1:5173/", waiting until "load"
+
+```
+
+# Page snapshot
+
+```yaml
+- article [ref=e3]:
+  - generic [ref=e6]:
+    - heading "Unable to connect" [level=1] [ref=e7]
+    - paragraph [ref=e8]:
+      - text: Nightly can’t connect to the server at
+      - strong [ref=e9]: 127.0.0.1:5173
+    - generic [ref=e10]:
+      - heading "What can you do about it?" [level=3] [ref=e11]
+      - list [ref=e12]:
+        - listitem [ref=e13]: The site could be temporarily unavailable or too busy. Try again in a few moments.
+        - listitem [ref=e14]: If you are unable to load any pages, check your computer’s network connection.
+        - listitem [ref=e15]: If your computer or network is protected by a firewall or proxy, make sure that Nightly is permitted to access the web.
+    - button "Try Again" [ref=e18]
+```
+
+# Test source
+
+```ts
+  66  |             donor: { _id: 'd1', name: 'Green Market' },
+  67  |             location: { address: '123 Main St', coordinates: { latitude: 37.7749, longitude: -122.4194 } },
+  68  |             expiryTime: new Date(Date.now() + 86400000).toISOString(),
+  69  |             createdAt: new Date().toISOString(),
+  70  |           },
+  71  |           {
+  72  |             _id: 'f2',
+  73  |             title: 'Artisanal Bakery Bread',
+  74  |             description: 'Freshly baked sourdough loaves and whole wheat baguettes.',
+  75  |             quantity: 15,
+  76  |             unit: 'loaves',
+  77  |             category: 'Bakery',
+  78  |             dietaryInfo: ['Vegetarian'],
+  79  |             status: 'claimed',
+  80  |             donor: { _id: 'd1', name: 'Green Market' },
+  81  |             location: { address: '456 Market St', coordinates: { latitude: 37.7833, longitude: -122.4167 } },
+  82  |             expiryTime: new Date(Date.now() + 43200000).toISOString(),
+  83  |             createdAt: new Date().toISOString(),
+  84  |           },
+  85  |         ],
+  86  |         pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 2 },
+  87  |       }),
+  88  |     }),
+  89  |   );
+  90  | 
+  91  |   await page.route('**/api/v1/reservations**', (r: any) =>
+  92  |     r.fulfill({
+  93  |       status: 200,
+  94  |       contentType: 'application/json',
+  95  |       body: JSON.stringify({
+  96  |         success: true,
+  97  |         data: [
+  98  |           {
+  99  |             _id: 'r1',
+  100 |             food: { _id: 'f1', title: 'Organic Fresh Produce Box', quantity: 30, unit: 'kg' },
+  101 |             claimer: { _id: 'c1', name: 'Hope Shelter' },
+  102 |             status: 'pending',
+  103 |             createdAt: new Date().toISOString(),
+  104 |           },
+  105 |         ],
+  106 |         pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 1 },
+  107 |       }),
+  108 |     }),
+  109 |   );
+  110 | 
+  111 |   await page.route('**/api/v1/admin/dashboard', (r: any) =>
+  112 |     r.fulfill({
+  113 |       status: 200,
+  114 |       contentType: 'application/json',
+  115 |       body: JSON.stringify({
+  116 |         success: true,
+  117 |         data: { users: { total: 124, donors: 45, receivers: 60, volunteers: 15, admins: 4 }, food: { total: 380, available: 42, claimed: 310, expired: 28 }, reservations: { total: 310, completed: 295, pending: 15 } },
+  118 |       }),
+  119 |     }),
+  120 |   );
+  121 | 
+  122 |   await page.route('**/api/v1/admin/analytics', (r: any) =>
+  123 |     r.fulfill({
+  124 |       status: 200,
+  125 |       contentType: 'application/json',
+  126 |       body: JSON.stringify({
+  127 |         success: true,
+  128 |         data: {
+  129 |           donationsOverTime: [{ date: '2026-08-01', count: 12 }, { date: '2026-08-02', count: 18 }, { date: '2026-08-03', count: 25 }, { date: '2026-08-04', count: 32 }],
+  130 |           userGrowth: [{ date: '2026-08-01', count: 90 }, { date: '2026-08-02', count: 105 }, { date: '2026-08-03', count: 115 }, { date: '2026-08-04', count: 124 }],
+  131 |         },
+  132 |       }),
+  133 |     }),
+  134 |   );
+  135 | 
+  136 |   await page.route('**/api/v1/admin/users**', (r: any) =>
+  137 |     r.fulfill({
+  138 |       status: 200,
+  139 |       contentType: 'application/json',
+  140 |       body: JSON.stringify({
+  141 |         success: true,
+  142 |         data: [
+  143 |           { _id: 'u1', name: 'Green Grocery Store', email: 'donor@foodbridge.ai', role: 'donor', accountStatus: 'active', isVerified: true, createdAt: new Date().toISOString() },
+  144 |           { _id: 'u2', name: 'Hope Shelter Community', email: 'receiver@foodbridge.ai', role: 'ngo', accountStatus: 'active', isVerified: true, createdAt: new Date().toISOString() },
+  145 |           { _id: 'u3', name: 'Alex Volunteer', email: 'volunteer@foodbridge.ai', role: 'volunteer', accountStatus: 'active', isVerified: true, createdAt: new Date().toISOString() },
+  146 |         ],
+  147 |         pagination: { page: 1, limit: 10, totalPages: 1, totalItems: 3 },
+  148 |       }),
+  149 |     }),
+  150 |   );
+  151 | 
+  152 |   await page.addInitScript(
+  153 |     ({ token, userObj }) => {
+  154 |       window.localStorage.setItem('accessToken', token);
+  155 |       window.localStorage.setItem('refreshToken', token);
+  156 |       window.localStorage.setItem('user', JSON.stringify(userObj));
+  157 |     },
+  158 |     { token: 'mock-session-token', userObj: user },
+  159 |   );
+  160 | };
+  161 | 
+  162 | test.describe('Capture Real Application Screenshots (1920x1080)', () => {
+  163 |   test.use({ viewport: { width: 1920, height: 1080 } });
+  164 | 
+  165 |   test('1. home.png', async ({ page }) => {
+> 166 |     await page.goto('/');
+      |                ^ Error: page.goto: NS_ERROR_CONNECTION_REFUSED
+  167 |     await page.waitForTimeout(1000);
+  168 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'home.png'), fullPage: false });
+  169 |   });
+  170 | 
+  171 |   test('2. login.png', async ({ page }) => {
+  172 |     await page.goto('/login');
+  173 |     await page.waitForTimeout(1000);
+  174 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'login.png'), fullPage: false });
+  175 |   });
+  176 | 
+  177 |   test('3. register.png', async ({ page }) => {
+  178 |     await page.goto('/register');
+  179 |     await page.waitForTimeout(1000);
+  180 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'register.png'), fullPage: false });
+  181 |   });
+  182 | 
+  183 |   test('4. donor-dashboard.png', async ({ page }) => {
+  184 |     await setupMockAuth(page, 'donor');
+  185 |     await page.goto('/donor');
+  186 |     await page.waitForTimeout(1500);
+  187 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'donor-dashboard.png'), fullPage: false });
+  188 |   });
+  189 | 
+  190 |   test('5. create-donation.png', async ({ page }) => {
+  191 |     await setupMockAuth(page, 'donor');
+  192 |     await page.goto('/donor/donate');
+  193 |     await page.waitForTimeout(1500);
+  194 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'create-donation.png'), fullPage: false });
+  195 |   });
+  196 | 
+  197 |   test('6. my-donations.png', async ({ page }) => {
+  198 |     await setupMockAuth(page, 'donor');
+  199 |     await page.goto('/donor/donations');
+  200 |     await page.waitForTimeout(1500);
+  201 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'my-donations.png'), fullPage: false });
+  202 |   });
+  203 | 
+  204 |   test('7. browse-food.png', async ({ page }) => {
+  205 |     await setupMockAuth(page, 'receiver');
+  206 |     await page.goto('/browse');
+  207 |     await page.waitForTimeout(1500);
+  208 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'browse-food.png'), fullPage: false });
+  209 |   });
+  210 | 
+  211 |   test('8. food-details.png', async ({ page }) => {
+  212 |     await setupMockAuth(page, 'receiver');
+  213 |     await page.goto('/receiver/available');
+  214 |     await page.waitForTimeout(1500);
+  215 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'food-details.png'), fullPage: false });
+  216 |   });
+  217 | 
+  218 |   test('9. receiver-dashboard.png', async ({ page }) => {
+  219 |     await setupMockAuth(page, 'receiver');
+  220 |     await page.goto('/receiver');
+  221 |     await page.waitForTimeout(1500);
+  222 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'receiver-dashboard.png'), fullPage: false });
+  223 |   });
+  224 | 
+  225 |   test('10. my-reservations.png', async ({ page }) => {
+  226 |     await setupMockAuth(page, 'receiver');
+  227 |     await page.goto('/receiver/reservations');
+  228 |     await page.waitForTimeout(1500);
+  229 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'my-reservations.png'), fullPage: false });
+  230 |   });
+  231 | 
+  232 |   test('11. notifications.png', async ({ page }) => {
+  233 |     await setupMockAuth(page, 'donor');
+  234 |     await page.goto('/donor');
+  235 |     await page.waitForTimeout(1000);
+  236 |     const notifBtn = page.locator('button[aria-label="Notifications"]');
+  237 |     if (await notifBtn.isVisible()) {
+  238 |       await notifBtn.click();
+  239 |       await page.waitForTimeout(1000);
+  240 |     }
+  241 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'notifications.png'), fullPage: false });
+  242 |   });
+  243 | 
+  244 |   test('12. profile.png', async ({ page }) => {
+  245 |     await setupMockAuth(page, 'donor');
+  246 |     await page.goto('/profile');
+  247 |     await page.waitForTimeout(1500);
+  248 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'profile.png'), fullPage: false });
+  249 |   });
+  250 | 
+  251 |   test('13. map.png', async ({ page }) => {
+  252 |     await setupMockAuth(page, 'receiver');
+  253 |     await page.goto('/map/nearby');
+  254 |     await page.waitForTimeout(2000);
+  255 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'map.png'), fullPage: false });
+  256 |   });
+  257 | 
+  258 |   test('14. admin-dashboard.png', async ({ page }) => {
+  259 |     await setupMockAuth(page, 'admin');
+  260 |     await page.goto('/admin');
+  261 |     await page.waitForTimeout(1500);
+  262 |     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'admin-dashboard.png'), fullPage: false });
+  263 |   });
+  264 | 
+  265 |   test('15. admin-users.png', async ({ page }) => {
+  266 |     await setupMockAuth(page, 'admin');
+```
