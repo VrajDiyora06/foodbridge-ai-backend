@@ -685,13 +685,59 @@ Endpoints documented:
 - `docker-compose.yml` — updated service build context to `./backend` and env file to `./backend/.env`
 - `.github/workflows/ci.yml` — updated CI workflow to independently test & build `./backend` and `./frontend` packages
 
+### Phase 10 — Backend Integration Testing: In-Memory MongoDB & Supertest suite (completed)
+
+**tests/setup/**
+- `dbSetup.ts` — `MongoMemoryServer` startup, Mongoose connection with `autoIndex: false`, database clearing between suites, and clean teardown
+- `fixtures.ts` — reusable fixture generators (`createAdmin`, `createDonor`, `createNgo`, `createVolunteer`, `createFood`, `createReservation`, `generateAccessToken`, `generateRefreshToken`)
+- `testHelpers.ts` — Supertest `api` instance and `authHeader` generator
+- `mocks.ts` — side-effect mocks for BullMQ queue helpers, Nodemailer `EmailService`, Socket.IO manager & event emitters, and Map-backed Redis client
+
+**tests/integration/** (7 files, 48 tests)
+- `auth.integration.test.ts` (12 tests) — Register, Login, Refresh Token (rotation + revocation), Logout, Forgot Password, Reset Password
+- `food.integration.test.ts` (7 tests) — Create Food, Update Food, Delete Food, Geospatial Nearby Search, Statistics
+- `reservation.integration.test.ts` (7 tests) — Create, Accept, Reject, Cancel, Pickup, Complete
+- `user.integration.test.ts` (3 tests) — GET /users/me Profile, PUT /users/me Update Profile, Protected fields restriction
+- `notification.integration.test.ts` (5 tests) — Fetch Feed, Mark Read, Delete, Admin Broadcast (queued job)
+- `admin.integration.test.ts` (6 tests) — Dashboard Stats, Analytics, User Listing, Account Status Update, Role Update
+- `security.integration.test.ts` (8 tests) — Unauthorized Requests (missing token), Malformed/Expired JWTs, RBAC Role Guards (403), Zod Validation Failures (400), Duplicate Email Conflict (409)
+
+### Phase 11 — Frontend E2E Testing: Playwright POM & Authentication Suite (completed)
+
+**frontend/e2e/pages/** (Page Object Model)
+- `BasePage.ts` — Base POM class providing navigation, wait state, and visual snapshot (`toHaveScreenshot()`) assertion helpers
+- `LoginPage.ts` — Login page POM encapsulating input locators (`emailInput`, `passwordInput`), form submit, forgot password modal trigger, and error alert assertions
+- `RegisterPage.ts` — Register page POM encapsulating input locators (`nameInput`, `emailInput`, `passwordInput`, `confirmPasswordInput`), role selection buttons (`donor`, `ngo`, `volunteer`), and submit actions
+- `DashboardPage.ts` — Generic dashboard page POM for role-aware layout assertions
+- `components/NavbarComponent.ts` — Navbar component POM encapsulating user menu dropdown, notification bell, and logout action
+
+**frontend/e2e/fixtures/**
+- `test.fixture.ts` — Custom Playwright test fixture injecting pre-configured POM instances (`loginPage`, `registerPage`, `dashboardPage`) and pre-authenticated storage states (`donorPage`, `adminPage`, `ngoPage`)
+
+**frontend/e2e/utils/**
+- `auth.helpers.ts` — Reusable action helpers (`loginUser`, `registerUser`, `logoutUser`, `createStorageState`) with `addInitScript` localStorage seeding and `GET /auth/me` interceptor mock
+
+**frontend/e2e/auth/** (9 spec files, 19 test cases per browser)
+- `register.spec.ts` (3 tests) — Registration form rendering, role selection button toggle, navigation link to login
+- `login.spec.ts` (3 tests) — Login form rendering, 401 invalid credentials error alert, visual regression snapshot check (`login-page-visual.png`)
+- `logout.spec.ts` (1 test) — User menu logout, redirection to `/login`, and `localStorage` token purge
+- `forgot-password.spec.ts` (2 tests) — Modal trigger from login page, email submission, confirmation alert
+- `protected-route.spec.ts` (5 tests) — Redirection of unauthenticated users to `/login` for `/donor`, `/admin`, `/profile`, and access grant for valid authenticated roles
+- `token-persistence.spec.ts` (1 test) — Token retention in `localStorage` across hard page reloads
+- `refresh-token.spec.ts` (1 test) — Automatic 401 token refresh queue handling
+- `unauthorized.spec.ts` (1 test) — Immediate redirect to `/login` with location state
+- `accessibility.spec.ts` (2 tests) — Automated WCAG accessibility audit on Login and Register pages using `@axe-core/playwright`
+
+### Phase 12 — Documentation: World-Class GitHub README (completed)
+
+- **`README.md`** — Enterprise-grade GitHub project documentation containing Shields.io badges, Table of Contents, Problem Statement & Solution, Categorized Feature Matrix, Tech Stack Table, Layered Clean Architecture Diagram, Tree Folder Structure, Installation & Docker Quick Start, Complete Environment Variable Reference, API Endpoint Matrix, Dual-Token JWT Sequence Diagram, User Role Matrix, Core Workflows, Screenshot Placeholders, Test Metrics (234 Total Test Executions), Security Protocols, Performance Optimizations, Future Roadmap, Contributing Guide, MIT License, and Author Profile.
+
+Summary:
+- **Documentation**: 100% complete, fully aligned with real production codebase and test suites.
 
 ## What has NOT been built yet
 
-- Frontend Auth Context & Axios API Integration
-- Frontend Forms & Validation (React Hook Form)
-- Frontend Socket.IO Notifications Client
-- Integration/e2e tests
+- Playwright End-to-End test suites for Donor, Receiver, Notification, Profile, and Admin portals (pending user review)
 
 ## Key decisions
 
@@ -769,7 +815,17 @@ Endpoints documented:
 - **SocketManager Singleton Infrastructure** — non-blocking Socket.IO setup attached to Express HTTP server with Winston logging, modular connection/disconnect handlers, and graceful shutdown
 - **Non-blocking Real-Time Business Event Emitters** — decoupled socket event functions for food (`food:created`, `food:updated`, `food:deleted`, `food:expired`) and reservations (`reservation:created`, `reservation:accepted`, `reservation:rejected`, `reservation:cancelled`, `reservation:picked_up`, `reservation:completed`, `reservation:expired`), wrapped in try/catch to ensure API reliability
 - **Clean Full-Stack Repository Structure** — root directory organized strictly into `backend/`, `frontend/`, `docs/`, `docker-compose.yml`, `.gitignore`, and `README.md`
-- **Vite 8 + React 19 + Tailwind CSS v4 Frontend Architecture** — clean modular structure, path alias `@`, role-based layout routing (PublicLayout & DashboardLayout), responsive Navbar with mobile drawer, collapsible Sidebar with role portal switching, 4-column Footer, atomic UI primitives (`Button`, `Card`, `Badge`, `Input`, `LoadingSpinner`), domain common components (`PageHeader`, `StatusBadge`, `EmptyState`), and clean barrel exports (`index.ts`) across all subdirectories
+- **Refactored User Management Module** — added profile attributes (`phone`, `address`, `avatar`, `organizationName`, `isDeleted`, `deletedAt`), Zod query & body validations (`user.validation.ts`), UserRepository extension for paginated filtering & search (`UserRepository.findPaginated`, `updateProfile`, `updateStatus`, `updateRole`, `softDelete`), UserService business logic (`user.service.ts`), UserController HTTP layer (`user.controller.ts`), and Swagger-annotated user router (`user.routes.ts`) mounted under `/api/v1/users`
+- **Notification Engine & Queue Integration** — created `Notification` model with compound index `{ recipient: 1, isRead: 1, createdAt: -1 }`, `NotificationRepository` with paginated user feeds & broadcast, `NotificationService`, `NotificationController`, `notification.routes.ts` mounted under `/api/v1/notifications`, `notification.events.ts` (emitting `notification:new`, `notification:read`, `notification:deleted`, `notification:broadcast`), and background BullMQ `NotificationWorker`
+- **Admin Dashboard & Analytics Module** — created `AdminService` aggregating system metrics (users, donors, NGOs, volunteers, food statuses, reservation statuses) & time-series analytics (daily/monthly donations, category distribution, user growth, completion rate), `AdminController`, and `admin.routes.ts` mounted under `/api/v1/admin`
+- **Frontend Auth & Interceptor Module** — implemented single Axios client instance (`api.ts`) with request token injection & 401 token refresh queueing, `AuthContext` provider with persistent token/session storage in `localStorage`, role-based `ProtectedRoute` route guards, React Hook Form powered `LoginPage` and `RegisterPage`, and modal `ForgotPasswordModal`
+- **Frontend Common Layout Module** — built modular startup-quality responsive layout architecture including `Navbar` (with UI search bar, `NotificationBell`, `UserMenu`, portal quick-links, and mobile menu drawer), `Sidebar` (role-aware navigation for `donor`, `receiver`/`ngo`/`volunteer`, `admin`), `Footer`, auto-generated dynamic `Breadcrumb` trail, `PageContainer`, `Avatar` with initials fallback, and integrated `DashboardLayout` container
+- **Frontend Donor Module** — built full donor feature module (`src/features/donor/`) with TanStack Query hooks (`useDonations`, `useDonation`, `useCreateDonation`, `useUpdateDonation`, `useDeleteDonation`, `useStatistics`), Zod-validated `DonationForm`, filterable `DonationTable` and responsive `DonationCard` views, `DonationStatusBadge`, `DeleteDialog`, `StatisticsCards`, Recharts impact visualization on `DonationStatsPage`, and pages (`DonorDashboardPage`, `MyDonationsPage`, `DonateFoodPage`, `EditDonationPage`, `DonationDetailsPage`, `DonationStatsPage`)
+- **Frontend Receiver / NGO / Volunteer Module** — built full receiver feature module (`src/features/receiver/`) with TanStack Query hooks (`useAvailableFood`, `useNearbyFood`, `useFoodDetail`, `useReservations`, `useReservation`, `useCreateReservation`, `useCancelReservation`, `useReservationStatistics`), `FoodCard`, `FoodGrid`, `FoodFilters`, `ReservationCard`, `ReservationTable`, `ReservationStatusBadge`, `ReservationTimeline`, `NearbyFoodMapPlaceholder`, `ConfirmReservationDialog`, `ReceiverStatisticsCards`, and pages (`ReceiverDashboardPage`, `AvailableFoodPage`, `NearbyFoodPage`, `FoodDetailPage`, `MyReservationsPage`, `ReservationDetailsPage`, `ReceiverStatsPage`)
+- **Frontend Notification System & Socket.IO Integration** — implemented complete real-time notification engine with `socketService` singleton, `NotificationProvider` context with socket event listeners (`notification:new`, `notification:read`, `notification:deleted`, `notification:broadcast`), `ToastContainer` alerts, `NotificationDrawer`, `NotificationItem`, `NotificationBadge`, `NotificationBell` with live unread badge, TanStack Query hooks (`useNotifications`, `useNotification`, `useUnreadCount`, `useMarkNotificationRead`, `useMarkAllRead`, `useDeleteNotification`), and pages (`NotificationsPage`, `NotificationDetailPage`)
+- **Frontend Admin Portal** — implemented full admin feature module (`src/features/admin/`) with TanStack Query hooks (`useAdminDashboard`, `useAdminAnalytics`, `useAdminUsers`, `useUpdateUserRole`, `useUpdateUserStatus`, `useDeleteUser`, `useAdminFoodModeration`, `useAdminReservations`, `useBroadcastNotification`), `UserStatusBadge`, `RoleBadge`, `MetricCard`, `ChartCard`, `DashboardCards`, `AnalyticsCharts`, `UserTable`, `UserFilters`, `FoodModerationTable`, `ReservationTable`, `BroadcastForm`, Recharts visualizations (daily donations bar chart, user growth area chart, category pie chart), and pages (`AdminDashboardPage`, `UserManagementPage`, `FoodModerationPage`, `ReservationMonitoringPage`, `AnalyticsPage`, `BroadcastNotificationPage`)
+- **Frontend User Profile & Settings Module** — implemented complete user profile module (`src/features/profile/`) with TanStack Query hooks (`useProfile`, `useUpdateProfile`, `useChangePassword`), `ProfileAvatar`, `ProfileHeader`, `UserInformation`, Zod-validated `ProfileForm`, password strength-metered `PasswordForm`, notification preferences, `DangerZone`, and pages (`ProfilePage`, `EditProfilePage`, `SecurityPage`, `AccountSettingsPage`)
+- **Frontend Interactive Maps Module** — integrated `leaflet` and `react-leaflet` (`src/features/maps/`) with `FoodMap`, `FoodMarker`, `FoodPopup`, `CurrentLocationButton`, `MapLegend`, `MapFilters`, browser geolocation hook (`useCurrentLocation`), nearby food query hook (`useNearbyFoodMap`), and pages (`NearbyMapPage`, `FoodLocationPage`)
 
 ## Commit history
 
@@ -812,4 +868,19 @@ ci: add GitHub Actions continuous integration
 feat(frontend): initialize React 19 + Vite + Tailwind CSS v4 foundation, layouts, navigation, and routing
 refactor(frontend): reorganize atomic components, add path aliases (@), barrel exports, and docs
 refactor(project): restructure project root into backend/, frontend/, and docs/
+feat(users): add user management module (profile CRUD, admin user controls, pagination, soft delete)
+feat(notifications): add notification engine, socket events, and BullMQ worker
+feat(admin): add admin dashboard, analytics, food moderation queue, and reservation monitoring
+feat(frontend-auth): complete frontend authentication, Axios interceptors, refresh token queue, and forgot password modal
+feat(frontend-layout): implement responsive Navbar, role-aware Sidebar, UserMenu, NotificationBell, Breadcrumbs, PageContainer, and DashboardLayout
+feat(frontend-donor): implement full Donor module (Dashboard, Create, Edit, My Donations, Details, Stats, TanStack Query hooks, Zod validation, Recharts)
+feat(frontend-receiver): implement Receiver/NGO/Volunteer module (Dashboard, Available Catalog, Nearby Geolocation Map, Details, My Reservations, Reservation Details, Stats, TanStack Query hooks, Recharts)
+feat(frontend-notifications): implement complete Notification System & Socket.IO real-time integration (NotificationProvider, ToastContainer, NotificationDrawer, NotificationBell, NotificationsPage, NotificationDetailPage)
+feat(frontend-admin): implement complete Admin Portal (Dashboard, User Management, Food Moderation Queue, Reservation Monitoring, Recharts Analytics, Broadcast Notifications, TanStack Query hooks)
+feat(frontend-profile): implement complete User Profile & Settings module (ProfilePage, EditProfilePage, SecurityPage, AccountSettingsPage, ProfileForm, PasswordForm, DangerZone, TanStack Query hooks)
+feat(frontend-maps): implement interactive React Leaflet map module (FoodMap, FoodMarker, FoodPopup, CurrentLocationButton, MapLegend, MapFilters, Geolocation hook, NearbyMapPage, FoodLocationPage)
+test(backend): add comprehensive Jest unit test suite (11 suites, 148 tests)
+test(backend): add production-quality Supertest & MongoMemoryServer integration test suite (7 suites, 48 tests)
+test(frontend): add production-quality Playwright POM & Authentication E2E test suite with Axe accessibility and visual regression snapshots (9 specs, 38 test runs)
+docs(readme): generate world-class enterprise-grade GitHub README.md documentation
 ```

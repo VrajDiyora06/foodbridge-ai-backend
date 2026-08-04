@@ -9,5 +9,8 @@ export {
   SendEmailOptions,
   RenderedTemplate,
 } from './email.service';
+export { UserService, userService } from './user.service';
+export { NotificationService, notificationService } from './notification.service';
+export { AdminService, adminService } from './admin.service';
 
 

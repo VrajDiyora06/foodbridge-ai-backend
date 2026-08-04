@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Utensils, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ForgotPasswordModal } from '../../components/modals/ForgotPasswordModal';
 import type { LoginCredentials } from '../../types/auth';
 
 export const LoginPage: React.FC = () => {
@@ -12,6 +13,7 @@ export const LoginPage: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
 
@@ -105,6 +107,13 @@ export const LoginPage: React.FC = () => {
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
                 Password
               </label>
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-xs text-emerald-600 font-semibold hover:underline"
+              >
+                Forgot password?
+              </button>
             </div>
             <div className="relative">
               <input
@@ -165,6 +174,12 @@ export const LoginPage: React.FC = () => {
           </Link>
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+      />
     </div>
   );
 };

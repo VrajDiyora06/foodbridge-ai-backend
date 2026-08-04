@@ -136,6 +136,48 @@ export class ReservationRepository {
   }
 
   /**
+   * Find all system reservations with filtering, pagination, and populated details (Admin).
+   */
+  async findAll(
+    filters: ReservationFilters = {},
+    pagination: PaginationOptions = {},
+  ): Promise<PaginatedResult<IReservationDocument>> {
+    const query: Record<string, unknown> = {};
+
+    if (filters.status) query.status = filters.status;
+    if (filters.food) query.food = filters.food;
+    if (filters.claimer) query.claimer = filters.claimer;
+    if (filters.claimerRole) query.claimerRole = filters.claimerRole;
+
+    const page = Math.max(1, pagination.page || 1);
+    const limit = Math.max(1, pagination.limit || 10);
+    const skip = (page - 1) * limit;
+
+    const sortBy = pagination.sortBy || 'createdAt';
+    const sortOrder = pagination.sortOrder === 'asc' ? 1 : -1;
+    const sort: Record<string, 1 | -1> = { [sortBy]: sortOrder };
+
+    const [data, total] = await Promise.all([
+      Reservation.find(query)
+        .populate('food')
+        .populate('claimer', 'name email role accountStatus phone organizationName')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean<IReservationDocument[]>(),
+      Reservation.countDocuments(query),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
    * Update reservation fields.
    */
   async update(

@@ -39,6 +39,10 @@ export class ApiResponse {
     return this.send(res, StatusCodes.CREATED, message, data);
   }
 
+  static accepted<T>(res: Response, data?: T, message = 'Accepted') {
+    return this.send(res, StatusCodes.ACCEPTED, message, data);
+  }
+
   static noContent(res: Response) {
     return res.status(StatusCodes.NO_CONTENT).send();
   }

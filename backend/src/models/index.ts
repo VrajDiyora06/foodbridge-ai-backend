@@ -7,3 +7,10 @@ export {
   ReservationStatus,
   ClaimerRole,
 } from './reservation.model';
+export {
+  default as Notification,
+  INotification,
+  INotificationDocument,
+  NotificationType,
+  NotificationPriority,
+} from './notification.model';

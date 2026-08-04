@@ -25,6 +25,12 @@ export interface IUser {
   role: UserRole;
   accountStatus: AccountStatus;
   isVerified: boolean;
+  phone?: string | null;
+  address?: string | null;
+  avatar?: string | null;
+  organizationName?: string | null;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   passwordChangedAt: Date | null;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -91,6 +97,40 @@ const userSchema = new Schema<IUserDocument>(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+
+    phone: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    avatar: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    organizationName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
     },
 
     passwordChangedAt: {

@@ -5,12 +5,14 @@ import {
   FOOD_EXPIRY_QUEUE,
   RESERVATION_EXPIRY_QUEUE,
   EMAIL_QUEUE,
+  NOTIFICATION_QUEUE,
 } from './queueNames';
 
 // ── Queue & Event Singletons ──────────────────────────────────────
 export let foodExpiryQueue: Queue;
 export let reservationExpiryQueue: Queue;
 export let emailQueue: Queue;
+export let notificationQueue: Queue;
 
 const queueEventsList: QueueEvents[] = [];
 
@@ -81,6 +83,18 @@ export const initQueues = (): void => {
       removeOnFail: false,
     },
   });
+  notificationQueue = new Queue(NOTIFICATION_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  });
 
   // Create QueueEvents instances and attach listeners
   const foodExpiryEvents = new QueueEvents(FOOD_EXPIRY_QUEUE, { connection });
@@ -94,6 +108,10 @@ export const initQueues = (): void => {
   const emailEvents = new QueueEvents(EMAIL_QUEUE, { connection });
   setupQueueEvents(EMAIL_QUEUE, emailEvents);
   queueEventsList.push(emailEvents);
+
+  const notificationEvents = new QueueEvents(NOTIFICATION_QUEUE, { connection });
+  setupQueueEvents(NOTIFICATION_QUEUE, notificationEvents);
+  queueEventsList.push(notificationEvents);
 
   logger.info('BullMQ queue infrastructure initialized successfully');
 };
@@ -139,6 +157,19 @@ export const addEmailJob = async (
   return emailQueue.add('send-email', data, opts);
 };
 
+/**
+ * Enqueue a notification job.
+ */
+export const addNotificationJob = async (
+  data: Record<string, unknown> = {},
+  opts?: JobsOptions,
+) => {
+  if (!notificationQueue) {
+    throw new Error('notificationQueue is not initialized');
+  }
+  return notificationQueue.add('send-notification', data, opts);
+};
+
 // ── Graceful Shutdown ─────────────────────────────────────────────
 
 /**
@@ -157,6 +188,7 @@ export const closeQueues = async (): Promise<void> => {
   if (foodExpiryQueue) await foodExpiryQueue.close();
   if (reservationExpiryQueue) await reservationExpiryQueue.close();
   if (emailQueue) await emailQueue.close();
+  if (notificationQueue) await notificationQueue.close();
 
   logger.info('BullMQ queues closed gracefully');
 };

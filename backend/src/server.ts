@@ -10,6 +10,8 @@ import {
   closeReservationExpiryWorker,
   initEmailWorker,
   closeEmailWorker,
+  initNotificationWorker,
+  closeNotificationWorker,
 } from './jobs';
 import { socketManager } from './socket/socketManager';
 import logger from './utils/logger';
@@ -22,6 +24,7 @@ const startServer = async () => {
   initFoodExpiryWorker();
   initReservationExpiryWorker();
   initEmailWorker();
+  initNotificationWorker();
 
   // ── Start HTTP server ──────────────────────────────────
   const server = app.listen(env.port, () => {
@@ -40,6 +43,7 @@ const startServer = async () => {
       logger.info('HTTP server closed');
 
       await socketManager.close();
+      await closeNotificationWorker();
       await closeEmailWorker();
       await closeReservationExpiryWorker();
       await closeFoodExpiryWorker();

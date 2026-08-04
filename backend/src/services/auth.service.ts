@@ -58,6 +58,7 @@ export class AuthService {
       email: dto.email,
       password: hashedPassword,
       role: dto.role,
+      isVerified: env.isDevelopment,
     });
 
     const verificationToken = await this.tokenService.storeVerificationToken(
